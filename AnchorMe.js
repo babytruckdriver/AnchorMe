@@ -35,17 +35,16 @@ log('>>> Greasemonkey\'s working!');
 var util = {
     cache: {
         setBookMark: function (key, obj) {
-            console.log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position);
-            localStorage.setItem(key, obj);
+            log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position);
+            localStorage.setItem(key, JSON.stringify(obj));
         },
         getBookMark: function (key) {
-            log(">>->key: " + key);
             var objStored = localStorage.getItem(key);
-            /*if (objStored) {
+            if (objStored) {
                 objStored = JSON.parse(objStored);            
-                console.log("key:" + key + " \nobj.type:" + objStored.type + "\nobj.position: " + objStored.position);
+                log("key:" + key + " \nobj.type:" + objStored.type + "\nobj.position: " + objStored.position);
                 return objStored;
-            }*/
+            }
             return undefined;
         }
     }
@@ -95,7 +94,7 @@ var estilos = "" +
 
 
 var loadScript = function () {
-    var key = window.location,
+    var key = window.location.href.split("#")[0],
         ANCHOR = "smuxAnchor",
         marcador = {
             type: "",
