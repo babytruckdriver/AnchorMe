@@ -21,6 +21,7 @@
 * - Refactorizar el código para que esté mejor ordenado (objetos)
 * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
 * - Mostrar en el botón de "Ir al Marcador" si existe algún marcador en la página. (Mostrar desactivado si no, por ejemplo)
+* - Poder borrar el marcador existente en una página
 */
 
 'use strict';
