@@ -4,6 +4,7 @@
 // @description Add anchors to a page
 // @include     https://developer.mozilla.org/*
 // @include     http://www.2ality.com/2013/06/basic-javascript.html*
+// @include     http://www.atareao.es/*
 // @version     0.1
 // @grant       none
 // ==/UserScript==
@@ -16,7 +17,8 @@
 * Debe guardarse el marcador en localStorage para añadirlo al cargar la página
 * 
 * TODO: 
-* - Añadir animación a la derecha del botón cuando se añada un nuevo marcador.
+* - Refactorizar el código para que esté mejor ordenado (objetos)
+* - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
 */
 
 'use strict';
@@ -65,7 +67,7 @@ var estilos = "" +
         "color: white;" +
         "text-align: center;" +             
         "position: fixed;" +              
-        "z-index: 99;" +              
+        "z-index: 99999;" +              
         "top: 10px;" +              
         "left: 10px;" +              
         "width: 160px;" +              
@@ -82,7 +84,8 @@ var estilos = "" +
         "padding-right: 20px;" +             
         "text-align: right;" +              
         "box-sizing: border-box;" +              
-        "position: fixed;" +              
+        "position: fixed;" +  
+        "z-index: 99998;" +  
         "top: 10px;" +              
         "left: 10px;" +              
         "width: 160px;" +              
@@ -112,17 +115,19 @@ var loadScript = function () {
     // y añade en el lugar adecuado <a name="marcador"></a>
     (function () {
         var marcadorTemporal = util.cache.getBookMark(key);
-        log(">>" + marcadorTemporal.type);
-        /*if(marcadorTemporal.type)
+        if(marcadorTemporal)
         {
             var elementos = $(marcadorTemporal.type);
+            
             $.each(elementos, function(i){
+                log(">>>->" + $(this).text());
                 if(i === marcadorTemporal.position) {
                     $(this).before("<a name='"+ ANCHOR + "'></a>");
-                    break;
+                    //FIX: Por alguna razón 'break' falla ?¿?¿?
+                    //break;
                 }
             });
-        }*/
+        }
     }());
 
 
@@ -153,7 +158,9 @@ var loadScript = function () {
         
         //Selector con todos los elementos del mismo tipo que el seleccionado
         var elementos = $($(this)[0].tagName);
+        log("ññ:" + elementos.length);
         $.each(elementos, function (i) {
+            log("ññ:" + $(this).text());
             if(this == that) {
                marcador.position = i;
             }
@@ -172,17 +179,19 @@ var loadScript = function () {
 //Cargar jQuery si la página no lo tiene. 
 var isJQuery = (typeof jQuery === "undefined") ? false : true;
 
+// Si la página no dispone de jQuery y hay que cargarlo, por lo que se debe esperar un tiempo
+// a que la biblioteca cargue
 if(!isJQuery) {
     log(">>Se carga jQuery");
     var script = document.createElement("script");
     script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
     document.head.appendChild(script);
     
-    // Si la página no dispone de jQuery y hay que cargarlo se debe esperar un tiempo
-    // a que la biblioteca cargue
     setTimeout(loadScript, 6000);    
 } else {
-    log(">>La página ya dispone de jQuery. Se comienza inmediatamente con el Script");
-    loadScript();
+    //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
+    //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
+    log(">>La página ya dispone de jQuery. Se comienzará en 2 segundos con el Script");
+    setTimeout(loadScript, 2000);  
 }
 
