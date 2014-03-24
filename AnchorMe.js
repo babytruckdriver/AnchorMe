@@ -21,23 +21,9 @@
 
 'use strict';
 
-//Cargar jQuery si la página no lo tiene. 
-var isJQuery = (typeof jQuery === "undefined") ? false : true;
-
-if(!isJQuery) {
-    console.log(">>Se carga jQuery");
-    var script = document.createElement("script");
-    script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
-    document.head.appendChild(script);
-}
-
-
-
 //Activa o desactiva el logging
-var loging = true,
-    anchor = '';
+var loging = true;
 
-//aquí debe guardarse el marcador recogido de localStorage, de existir.
 var log = function (logString) {
     if (loging) {
         console.log(logString);
@@ -45,16 +31,22 @@ var log = function (logString) {
 }
 log('>>> Greasemonkey\'s working!');
 
+// Objeto de utilidades: Get y Set del marcador de la página
 var util = {
     cache: {
         setBookMark: function (key, obj) {
-            // Si no existe el objecto lo crea.
-            if (!localStorage.getItem(key)) {
-                localStorage.setItem(key, obj);
-            }
+            console.log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position);
+            localStorage.setItem(key, obj);
         },
         getBookMark: function (key) {
-            return localStorage.getItem(key);
+            log(">>->key: " + key);
+            var objStored = localStorage.getItem(key);
+            /*if (objStored) {
+                objStored = JSON.parse(objStored);            
+                console.log("key:" + key + " \nobj.type:" + objStored.type + "\nobj.position: " + objStored.position);
+                return objStored;
+            }*/
+            return undefined;
         }
     }
 };
@@ -86,7 +78,8 @@ var estilos = "" +
     ".info {" +          
         "font: 14px/1.5 'Open Sans',sans-serif;" + 
         "display: inline;" +             
-        "background: #d04848;" +              
+        "background: #d04848;" + 
+        "color: white;" +
         "padding-right: 20px;" +             
         "text-align: right;" +              
         "box-sizing: border-box;" +              
@@ -104,28 +97,46 @@ var estilos = "" +
 var loadScript = function () {
     var key = window.location,
         ANCHOR = "smuxAnchor",
-        value = "";
+        marcador = {
+            type: "",
+            position: 0
+        };
     
     log("Cargando el Script Greasemonkey.")
     //Añado los estilos a la página
-    $('head').append('<style>' + estilos + '</style>');
+    $("head").append("<style>" + estilos + "</style>");
 
     //Añado el botón de creación de marcador
-    $('body').append('<div class=\'boton\'>Ir al marcador!</div><div class=\'info\'>Marcador añadido</div>');
+    $("body").append("<div class='boton'>Ir al marcador!</div><div class='info'>Marcador añadido</div>");
 
-    //TODO: Función ejecutada al iniciar que recoge de localStorage el marcador 
+    // Función ejecutada al iniciar que recoge de localStorage el marcador 
     // y añade en el lugar adecuado <a name="marcador"></a>
+    (function () {
+        var marcadorTemporal = util.cache.getBookMark(key);
+        log(">>" + marcadorTemporal.type);
+        /*if(marcadorTemporal.type)
+        {
+            var elementos = $(marcadorTemporal.type);
+            $.each(elementos, function(i){
+                if(i === marcadorTemporal.position) {
+                    $(this).before("<a name='"+ ANCHOR + "'></a>");
+                    break;
+                }
+            });
+        }*/
+    }());
 
 
     /*
-        * Manejadores de eventos
-        */
+     * Manejadores de eventos
+     */
+    
+    //
     $('.boton').on('click', function (event) {
-        //TODO: 
         window.location.hash = ANCHOR;
     });
 
-    //Solo es posible añadir el marcador los elementos h1, h2, h3, h4, p, div
+    //Solo es posible añadir el marcador los elementos h1, h2, h3, h4, y p.
     $('h1, h2, h3, h4, p') .on('dblclick', function () {
 
         //Muestra, mediante animación, que se ha añadido un marcador
@@ -133,15 +144,46 @@ var loadScript = function () {
             $('.info') .css('width', '160px').dequeue();
         });
         log('Marcador añadido: ' + $(this)[0].tagName);
+        marcador.type = $(this)[0].tagName;
 
-        //TODO: Llamada a la función que guarda la información en localStorage
+        //Llamada a la función que guarda la información en localStorage
+        //Machaca si existe un marcador anterior
         $("a[name='" + ANCHOR + "']").remove();
-        util.cache.setBookMark(key, value);
+        
+        var that = this;
+        
+        //Selector con todos los elementos del mismo tipo que el seleccionado
+        var elementos = $($(this)[0].tagName);
+        $.each(elementos, function (i) {
+            if(this == that) {
+               marcador.position = i;
+            }
+        });
+        
+        key = window.location.href.split("#")[0];
+        
+        //Guarda en localStorage el marcador de la página
+        util.cache.setBookMark(key, marcador);
+        //Se incluye el marcador en la página para ser usuado en esta sesión
         $(this).before("<a name='"+ ANCHOR + "'></a>");
     });
     
 };
 
-// Esperamos 6 segundos a que la página cargue completamente.
-// Hay páginas que hacen varias recargas ?¿?¿?.
-setTimeout(loadScript, 6000);
+//Cargar jQuery si la página no lo tiene. 
+var isJQuery = (typeof jQuery === "undefined") ? false : true;
+
+if(!isJQuery) {
+    log(">>Se carga jQuery");
+    var script = document.createElement("script");
+    script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
+    document.head.appendChild(script);
+    
+    // Si la página no dispone de jQuery y hay que cargarlo se debe esperar un tiempo
+    // a que la biblioteca cargue
+    setTimeout(loadScript, 6000);    
+} else {
+    log(">>La página ya dispone de jQuery. Se comienza inmediatamente con el Script");
+    loadScript();
+}
+
