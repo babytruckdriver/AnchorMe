@@ -5,6 +5,7 @@
 // @include     https://developer.mozilla.org/*
 // @include     http://www.2ality.com/2013/06/basic-javascript.html*
 // @include     http://www.atareao.es/*
+// @include     http://addyosmani.github.io/backbone-fundamentals/*
 // @version     0.1
 // @grant       none
 // ==/UserScript==
@@ -19,6 +20,7 @@
 * TODO: 
 * - Refactorizar el código para que esté mejor ordenado (objetos)
 * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
+* - Mostrar en el botón de "Ir al Marcador" si existe algún marcador en la página. (Mostrar desactivado si no, por ejemplo)
 */
 
 'use strict';
