@@ -1,3 +1,5 @@
+/*jslint indent:8, devel:true, browser:true, vars:true*/
+/*global jQuery, $, console*/
 // ==UserScript==
 // @name        AnchorMe
 // @namespace   http://userscripts.org/smux
@@ -70,45 +72,51 @@ var App = {
 
         //Estilos necesarios para el script
         estilos: "" +
-        "@font-face {" +
-            "font-family: 'Open Sans';" +
-            "font-style: normal;" +
-            "font-weight: normal;" +
-            'src: url("//mozorg.cdn.mozilla.net/media/fonts/OpenSans-Regular-webfont.eot?#iefix") format("embedded-opentype"), url("//mozorg.cdn.mozilla.net/media/fonts/OpenSans-Regular-webfont.woff") format("woff"), url("//mozorg.cdn.mozilla.net/media/fonts/OpenSans-Regular-webfont.ttf") format("truetype"), url("//mozorg.cdn.mozilla.net/media/fonts/OpenSans-Regular-webfont.svg#OpenSansRegular") format("svg");' +
+        "@font-face{" +
+                "font-family: FontAwesome;" +
+                "src:url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.eot?#iefix) format('eot')," +
+                "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.woff) format('woff')," +
+                "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.ttf) format('truetype')," +
+                "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.svg#FontAwesome) format('svg');" +
+                "font-weight:400;font-style:normal;" +
         "}" +
-        "" +
-        ".boton {" + 
-            "font: 14px/1.5 'Open Sans',sans-serif;" + 
-            "background: black;" + 
-            "color: white;" +
-            "text-align: center;" +             
-            "position: fixed;" +              
-            "z-index: 99999;" +              
-            "top: 10px;" +              
-            "left: 10px;" +              
-            "width: 160px;" +              
-            "border-radius: 5px;" +              
-            "box-shadow: #b5b5b5 0 2px 6px 2px;" +             
-            "cursor: pointer;" +           
-        "}" +  
-        "" +
-        ".info {" +          
-            "font: 14px/1.5 'Open Sans',sans-serif;" + 
-            "display: inline;" +             
-            "background: #d04848;" + 
-            "color: white;" +
-            "opacity: 0;" +
-            "padding-right: 20px;" +             
-            "text-align: right;" +              
-            "box-sizing: border-box;" +              
-            "position: fixed;" +  
-            "z-index: 99998;" +  
-            "top: 10px;" +              
-            "left: 10px;" +              
-            "width: 160px;" +              
-            "box-shadow: #b5b5b5 0 2px 6px 2px;" +              
-            "border-radius: 0 5px 5px 0 ;" +              
-            "transition: width 0.3s ease-out;" +           
+        ".boton {" +
+                "font: 14px/1.5 sans-serif;" +
+                "background: black;" +
+                "color: white;" +
+                "text-align: center;" +
+                "position: fixed;" +
+                "z-index: 99999;" +
+                "top: 10px;" +
+                "left: 10px;" +
+                "width: 160px;" +
+                "border-radius: 5px;" +
+                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
+                "cursor: pointer;" +
+        "}" +
+        ".info {" +
+                "font: 14px/1.5 sans-serif;" +
+                "display: inline;" +
+                "background: #d04848;" +
+                "color: white;" +
+                "opacity: 0;" +
+                "padding-right: 20px;" +
+                "text-align: right;" +
+                "box-sizing: border-box;" +
+                "position: fixed;" +
+                "z-index: 99998;" +
+                "top: 10px;" +
+                "left: 10px;" +
+                "width: 160px;" +
+                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
+                "border-radius: 0 5px 5px 0 ;" +
+                "transition: width 0.3s ease-out;" +
+        "}" +
+        ".boton::after {" +
+                "font-family: FontAwesome;" +
+                'content: "\f014";' +
+                "font-size: 1.5em;" +
+                "padding-left: 10px;" +
         "}",
 
         loadScript: function () {
@@ -174,7 +182,7 @@ var App = {
                 //Machaca si existe un marcador anterior
                 $("a[name='" + this.ANCHOR + "']").remove();
                 
-                this.marcador.type = $(event.target)[0].tagName; 
+                this.marcador.type = $(event.target)[0].tagName;
 
                 var that = this;
 
@@ -201,19 +209,19 @@ var App = {
                         .css('width', '320px')
                         .delay(2000).queue(function () {
                                 $('.info').css('width', '160px').dequeue();
-                });
+                        });
                 log('Marcador añadido: ' + $(event.target)[0].tagName);
         },
         
         desactivarBoton: function () {
                 this.btoIr.css("opacity", "0.3").css("cursor", "text");
-                this.btoIr.text(util.textos.btoIrNoHayMarcador);                
+                this.btoIr.text(util.textos.btoIrNoHayMarcador);
         },
         
         activarBoton: function () {
                 this.btoIr.css("opacity", "1").css("cursor", "pointer");
-                this.btoIr.text(util.textos.btoIrHayMarcador);                
-        }        
+                this.btoIr.text(util.textos.btoIrHayMarcador);
+        }
 
 };
 
