@@ -27,47 +27,47 @@
 'use strict';
 
 //Activa o desactiva el logging
-var loging = true;
+var logging = true;
 
 var log = function (logString) {
-    if (loging) {
-        console.log(logString);
-    }
+        if (logging) {
+                console.log(logString);
+        }
 };
 log('>>> Greasemonkey\'s working!');
 
 
 // Objeto de utilidades: Get y Set del marcador de la página
 var util = {
-    cache: {
-        setBookMark: function (key, obj) {
-            log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position);
-            localStorage.setItem(key, JSON.stringify(obj));
-        },
-        getBookMark: function (key) {
-            var objStored = localStorage.getItem(key);
-            if (objStored) {
-                objStored = JSON.parse(objStored);
-                log("key:" + key + " \nobj.type:" + objStored.type + "\nobj.position: " + objStored.position);
-                return objStored;
-            }
-            return undefined;
+        cache: {
+                setBookMark: function (key, obj) {
+                        log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position);
+                        localStorage.setItem(key, JSON.stringify(obj));
+                },
+                getBookMark: function (key) {
+                        var objStored = localStorage.getItem(key);
+                        if (objStored) {
+                                objStored = JSON.parse(objStored);
+                                log("key:" + key + " \nobj.type:" + objStored.type + "\nobj.position: " + objStored.position);
+                                return objStored;
+                        }
+                        return undefined;
+                }
         }
-    }
 };
 
 //Objeto principal de la aplicación
 var App = {
 
-    key: window.location.href.split("#")[0],
-    ANCHOR: "smuxAnchor",
-    marcador: {
-        type: "",
-        position: 0
-    },
+        key: window.location.href.split("#")[0],
+        ANCHOR: "smuxAnchor",
+        marcador: {
+                type: "",
+                position: 0
+        },
 
-    //Estilos necesarios para el script
-    estilos: "" +
+        //Estilos necesarios para el script
+        estilos: "" +
         "@font-face {" +
             "font-family: 'Open Sans';" +
             "font-style: normal;" +
@@ -108,83 +108,87 @@ var App = {
             "transition: width 0.3s ease-out;" +           
         "}",
 
-    loadScript: function () {
-        log(">>Función loadScript1 ");
-        this.cargarInterfaz();
-        log(">>Función loadScript2");
-        this.agregarMarcadorAlmacenado();
-        log(">>Función loadScript3");
-        this.bindElements();
-        //No se cachean nodos web porque no se reutiliza ninguno
-    },
+        loadScript: function () {
+                this.cargarInterfaz();
+                this.agregarMarcadorAlmacenado();
+                this.bindElements();
+                
+                //No se cachean nodos web porque no se reutiliza ninguno
+        },
 
-    cargarInterfaz: function () {
-        //Añado los estilos a la página
-        $("head").append("<style>" + this.estilos + "</style>");
+        cargarInterfaz: function () {
+                
+                //Añado los estilos a la página
+                $("head").append("<style>" + this.estilos + "</style>");
 
-        //Añado el botón de creación de marcador
-        $("body").append("<div class='boton'>Ir al marcador!</div><div class='info'>Marcador añadido</div>");           
-    },
+                //Añado el botón de Ir al Marcador
+                $("body").append("<div class='boton'>Ir al marcador!</div><div class='info'>Marcador añadido</div>");
+        },
 
-    // Función ejecutada al iniciar que recoge de localStorage el marcador 
-    // y añade en el lugar adecuado <a name="marcador"></a>    
-    agregarMarcadorAlmacenado: function () {
-        var marcadorTemporal = util.cache.getBookMark(this.key),
-            elementos;
-        if (marcadorTemporal) {
-            elementos = $(marcadorTemporal.type);
-            var that = this;
+        // Función ejecutada al iniciar que recoge de localStorage el marcador 
+        // y añade en el lugar adecuado <a name="marcador"></a>    
+        agregarMarcadorAlmacenado: function () {
+                var marcadorTemporal = util.cache.getBookMark(this.key),
+                        elementos;
+                if (marcadorTemporal) {
+                        
+                        //Colección de los elementos del tipo del elemento marcado
+                        elementos = $(marcadorTemporal.type);
+                        var that = this;
 
-            $.each(elementos, function (i) {
-                if (i === marcadorTemporal.position) {
-                    $(this).before("<a name='" + that.ANCHOR + "'></a>");
-                    //FIX: Por alguna razón 'break' falla ?¿?¿?
-                    //break;
+                        $.each(elementos, function (i) {
+                                if (i === marcadorTemporal.position) {
+                                        $(this).before("<a name='" + that.ANCHOR + "'></a>");
+                                        //FIXME: Por alguna razón 'break' falla ?¿?¿?
+                                        //break;
+                                }
+                        });
                 }
-            });
+                log("Marcador Temporal agregado");
+        },
+
+        bindElements: function () {
+                
+                //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
+                $('h1, h2, h3, h4, p').on('dblclick', this.setMarcador.bind(this));
+
+                var that = this;
+                $('.boton').on('click', function () {
+                        window.location.hash = that.ANCHOR;
+                });
+        },
+
+        setMarcador: function (event) {
+
+                //Muestra, mediante animación, que se ha añadido un marcador
+                $('.info').css('width', '320px').delay(2000).queue(function () {
+                        $('.info').css('width', '160px').dequeue();
+                });
+                log('Marcador añadido: ' + $(event.target)[0].tagName);
+                this.marcador.type = $(event.target)[0].tagName;
+
+                //Llamada a la función que guarda la información en localStorage
+                //Machaca si existe un marcador anterior
+                $("a[name='" + this.ANCHOR + "']").remove();
+
+                var that = this;
+
+                //Selector con todos los elementos del mismo tipo que el seleccionado
+                var elementos = $($(event.target)[0].tagName);
+                $.each(elementos, function (i) {
+                        if (this === event.target) {
+                                that.marcador.position = i;
+                        }
+                });
+
+                this.key = window.location.href.split("#")[0];
+
+                //Guarda en localStorage el marcador de la página
+                util.cache.setBookMark(this.key, this.marcador);
+                
+                //Se incluye el marcador en la página para ser usuado en esta sesión
+                $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
         }
-        log("Marcador Temporal agregado");
-    },
-
-    bindElements: function () {
-        //Solo es posible añadir el marcador los elementos h1, h2, h3, h4, y p.
-        $('h1, h2, h3, h4, p').on('dblclick', this.setMarcador.bind(this));
-
-        $('.boton').on('click', function (event) {
-            window.location.hash = this.ANCHOR;
-        }.bind(this));
-    },
-
-    setMarcador: function (event) {
-
-        //Muestra, mediante animación, que se ha añadido un marcador
-        $('.info').css('width', '320px').delay(2000).queue(function () {
-            $('.info').css('width', '160px').dequeue();
-        });
-        log('Marcador añadido: ' + $(event.target)[0].tagName);
-        this.marcador.type = $(event.target)[0].tagName;
-
-        //Llamada a la función que guarda la información en localStorage
-        //Machaca si existe un marcador anterior
-        $("a[name='" + this.ANCHOR + "']").remove();
-
-        var that = this;
-
-        //Selector con todos los elementos del mismo tipo que el seleccionado
-        var elementos = $($(event.target)[0].tagName);
-        $.each(elementos, function (i) {
-            if (this === that) {
-                that.marcador.position = i;
-            }
-        });
-
-        this.key = window.location.href.split("#")[0];
-
-        //Guarda en localStorage el marcador de la página
-        util.cache.setBookMark(this.key, this.marcador);
-        //Se incluye el marcador en la página para ser usuado en esta sesión
-        $(this).before("<a name='" + this.ANCHOR + "'></a>");
-    }
 
 };
 
@@ -194,16 +198,19 @@ var isJQuery = (typeof jQuery === "undefined") ? false : true;
 // Si la página no dispone de jQuery hay que incluirlo, por lo que se debe esperar un tiempo
 // a que la biblioteca cargue
 if (!isJQuery) {
-    log(">>Se carga jQuery");
-    var script = document.createElement("script");
-    script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
-    document.head.appendChild(script);
-    //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
-    setTimeout(App.loadScript.bind(App), 6000);
+        log(">>No se ha detectado jQuery en la página, por lo que se procede a su carga...");
+        var script = document.createElement("script");
+        script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
+        document.head.appendChild(script);
+        
+        //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
+        setTimeout(App.loadScript.bind(App), 6000);
 } else {
-    //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
-    //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
-    log(">>La página ya dispone de jQuery. Se comienzará en 2 segundos con el Script");
-    //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
-    setTimeout(App.loadScript.bind(App), 2000);
+        
+        //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
+        //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
+        log(">>La página ya dispone de jQuery. Se comienzará en 2 segundos con el Script");
+        //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
+        
+        setTimeout(App.loadScript.bind(App), 2000);
 }
