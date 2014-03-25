@@ -18,19 +18,17 @@
  * Debe guardarse el marcador en localStorage para añadirlo al cargar la página
  *
  * TODO:
- * - Refactorizar el código para que esté mejor ordenado (objetos)
  * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
- * - Mostrar en el botón de "Ir al Marcador" si existe algún marcador en la página. (Mostrar desactivado si no, por ejemplo)
  * - Poder borrar el marcador existente en una página
  */
 
 'use strict';
 
 //Activa o desactiva el logging
-var logging = true;
+var DEBUG = true;
 
 var log = function (logString) {
-        if (logging) {
+        if (DEBUG && console) {
                 console.log(logString);
         }
 };
@@ -53,6 +51,10 @@ var util = {
                         }
                         return undefined;
                 }
+        },
+        textos: {
+                btoIrHayMarcador: "Ir al marcador!",
+                btoIrNoHayMarcador: "No existe marcador"
         }
 };
 
@@ -95,6 +97,7 @@ var App = {
             "display: inline;" +             
             "background: #d04848;" + 
             "color: white;" +
+            "opacity: 0;" +
             "padding-right: 20px;" +             
             "text-align: right;" +              
             "box-sizing: border-box;" +              
@@ -113,9 +116,9 @@ var App = {
                 this.agregarMarcadorAlmacenado();
                 this.bindElements();
                 
-                //No se cachean nodos web porque no se reutiliza ninguno
         },
-
+        
+        //Carga los elementos de la interfaz y los cachea
         cargarInterfaz: function () {
                 
                 //Añado los estilos a la página
@@ -123,6 +126,10 @@ var App = {
 
                 //Añado el botón de Ir al Marcador
                 $("body").append("<div class='boton'>Ir al marcador!</div><div class='info'>Marcador añadido</div>");
+                
+                //Cacheo
+                this.btoIr = $(".boton");
+                this.infoNuevoMarcador = $(".info");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -131,7 +138,6 @@ var App = {
                 var marcadorTemporal = util.cache.getBookMark(this.key),
                         elementos;
                 if (marcadorTemporal) {
-                        
                         //Colección de los elementos del tipo del elemento marcado
                         elementos = $(marcadorTemporal.type);
                         var that = this;
@@ -143,8 +149,12 @@ var App = {
                                         //break;
                                 }
                         });
+                        log("Marcador Temporal Almacenado agregado.");
+                } else {
+                        //No existe marcador para esta página
+                        this.desactivarBoton();
                 }
-                log("Marcador Temporal agregado");
+                
         },
 
         bindElements: function () {
@@ -153,23 +163,18 @@ var App = {
                 $('h1, h2, h3, h4, p').on('dblclick', this.setMarcador.bind(this));
 
                 var that = this;
-                $('.boton').on('click', function () {
+                this.btoIr.on('click', function () {
                         window.location.hash = that.ANCHOR;
                 });
         },
 
         setMarcador: function (event) {
 
-                //Muestra, mediante animación, que se ha añadido un marcador
-                $('.info').css('width', '320px').delay(2000).queue(function () {
-                        $('.info').css('width', '160px').dequeue();
-                });
-                log('Marcador añadido: ' + $(event.target)[0].tagName);
-                this.marcador.type = $(event.target)[0].tagName;
-
                 //Llamada a la función que guarda la información en localStorage
                 //Machaca si existe un marcador anterior
                 $("a[name='" + this.ANCHOR + "']").remove();
+                
+                this.marcador.type = $(event.target)[0].tagName; 
 
                 var that = this;
 
@@ -188,7 +193,27 @@ var App = {
                 
                 //Se incluye el marcador en la página para ser usuado en esta sesión
                 $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
-        }
+                
+                this.activarBoton();
+
+                //Muestra, mediante animación, que se ha añadido un marcador
+                $('.info').css("opacity", "1")
+                        .css('width', '320px')
+                        .delay(2000).queue(function () {
+                                $('.info').css('width', '160px').dequeue();
+                });
+                log('Marcador añadido: ' + $(event.target)[0].tagName);
+        },
+        
+        desactivarBoton: function () {
+                this.btoIr.css("opacity", "0.3").css("cursor", "text");
+                this.btoIr.text(util.textos.btoIrNoHayMarcador);                
+        },
+        
+        activarBoton: function () {
+                this.btoIr.css("opacity", "1").css("cursor", "pointer");
+                this.btoIr.text(util.textos.btoIrHayMarcador);                
+        }        
 
 };
 
@@ -209,7 +234,7 @@ if (!isJQuery) {
         
         //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
         //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
-        log(">>La página ya dispone de jQuery. Se comienzará en 2 segundos con el Script");
+        log(">>La página ya dispone de jQuery. Se comenzará con el Script en 2 segundos.");
         //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
         
         setTimeout(App.loadScript.bind(App), 2000);
