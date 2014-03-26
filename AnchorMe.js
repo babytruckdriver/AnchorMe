@@ -21,7 +21,7 @@
  *
  * TODO:
  * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
- * - Poder borrar el marcador existente en una página
+ * - Si no hay marcador en la página hacer que el botón no responda ante hover y click
  */
 
 'use strict';
@@ -52,11 +52,15 @@ var util = {
                                 return objStored;
                         }
                         return undefined;
+                },
+                deleteBookMark: function (key) {
+                        localStorage.removeItem(key);
+                        log("Marcador eliminado para página: " + key);
                 }
         },
         textos: {
                 btoIrHayMarcador: "Ir al marcador!",
-                btoIrNoHayMarcador: "No existe marcador"
+                btoIrNoHayMarcador: "No hay marcador"
         }
 };
 
@@ -78,21 +82,8 @@ var App = {
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.woff) format('woff')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.ttf) format('truetype')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.svg#FontAwesome) format('svg');" +
-                "font-weight:400;font-style:normal;" +
-        "}" +
-        ".boton {" +
-                "font: 14px/1.5 sans-serif;" +
-                "background: black;" +
-                "color: white;" +
-                "text-align: center;" +
-                "position: fixed;" +
-                "z-index: 99999;" +
-                "top: 10px;" +
-                "left: 10px;" +
-                "width: 160px;" +
-                "border-radius: 5px;" +
-                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
-                "cursor: pointer;" +
+                "font-weight:400;" +
+                "font-style:normal;" +
         "}" +
         ".info {" +
                 "font: 14px/1.5 sans-serif;" +
@@ -109,15 +100,53 @@ var App = {
                 "left: 10px;" +
                 "width: 160px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
-                "border-radius: 0 5px 5px 0 ;" +
+                "border-radius: 5px;" +
                 "transition: width 0.3s ease-out;" +
+        "}" + 
+        ".info-activo {" +
+                "opacity: 1;" +
         "}" +
-        ".boton::after {" +
-                "font-family: FontAwesome;" +
-                'content: "\f014";' +
-                "font-size: 1.5em;" +
+        ".contenedor {" +
+                "font: 14px/1.5 sans-serif;" +
+                "background: black;" +
+                "color: white;" +
+                "opacity: 0.3;" +
+                "text-align: center;" +
+                "position: fixed;" +
+                "z-index: 99999;" +
+                "top: 10px;" +
+                "left: 10px;" +
+                "width: 160px;" +
+                "border-radius: 5px;" +
+                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
+                "cursor: pointer;" +
+        "}" +
+        ".contenedor-activo {" +
+                "opacity: 1;" +
+        "}" +        
+        ".boton {" +
+                "display: inline;" +
+        "}" +           
+        ".boton:hover {" +
+                "opacity: 0.6;" +
+        "}" +  
+        ".boton:active {" +
+                "opacity: 0.3;" +
+        "}" +                
+        ".eliminar {" +
+                "font-family: FontAwesome; " +
                 "padding-left: 10px;" +
-        "}",
+        "}" +
+        ".eliminar::after {" +
+                "content: '\\f014';" +
+                "font-size: 1em;" +
+        "}" +
+        ".eliminar:hover::after {" +
+                "opacity: 0.6;" +
+        "}" +               
+        ".eliminar:active::after {" +
+                "opacity: 0.3;" +
+        "}",    
 
         loadScript: function () {
                 this.cargarInterfaz();
@@ -133,11 +162,13 @@ var App = {
                 $("head").append("<style>" + this.estilos + "</style>");
 
                 //Añado el botón de Ir al Marcador
-                $("body").append("<div class='boton'>Ir al marcador!</div><div class='info'>Marcador añadido</div>");
+                $("body").append("<div class='contenedor'><div class='boton'>Ir al marcador!</div><span class='eliminar'></span></div><div class='info'>Marcador añadido</div>");
                 
                 //Cacheo
                 this.btoIr = $(".boton");
                 this.infoNuevoMarcador = $(".info");
+                this.contenedor = $(".contenedor");
+                this.eliminar = $(".eliminar");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -157,6 +188,9 @@ var App = {
                                         //break;
                                 }
                         });
+                        
+                        this.activarBoton();
+                        
                         log("Marcador Temporal Almacenado agregado.");
                 } else {
                         //No existe marcador para esta página
@@ -169,6 +203,7 @@ var App = {
                 
                 //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
                 $('h1, h2, h3, h4, p').on('dblclick', this.setMarcador.bind(this));
+                this.eliminar.on("click", this.eliminarMarcador.bind(this));
 
                 var that = this;
                 this.btoIr.on('click', function () {
@@ -205,21 +240,28 @@ var App = {
                 this.activarBoton();
 
                 //Muestra, mediante animación, que se ha añadido un marcador
-                $('.info').css("opacity", "1")
-                        .css('width', '320px')
+                $('.info').css('width', '320px')
                         .delay(2000).queue(function () {
                                 $('.info').css('width', '160px').dequeue();
                         });
                 log('Marcador añadido: ' + $(event.target)[0].tagName);
         },
         
+        eliminarMarcador: function () {
+                util.cache.deleteBookMark(this.key);
+                $("a[name='" + this.ANCHOR + "']").remove();
+                this.desactivarBoton();
+        },
+        
         desactivarBoton: function () {
-                this.btoIr.css("opacity", "0.3").css("cursor", "text");
+                this.infoNuevoMarcador.removeClass("info-activo");
+                this.contenedor.removeClass("contenedor-activo").css("cursor", "text");
                 this.btoIr.text(util.textos.btoIrNoHayMarcador);
         },
         
         activarBoton: function () {
-                this.btoIr.css("opacity", "1").css("cursor", "pointer");
+                this.infoNuevoMarcador.addClass("info-activo");
+                this.contenedor.addClass("contenedor-activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador);
         }
 
