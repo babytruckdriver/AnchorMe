@@ -8,6 +8,7 @@
 // @include     http://www.2ality.com/2013/06/basic-javascript.html*
 // @include     http://www.atareao.es/*
 // @include     http://addyosmani.github.io/backbone-fundamentals/*
+// @include     https://github.com/Nijikokun/the-zen-approach/blob/master/*
 // @version     0.1
 // @grant       none
 // ==/UserScript==
@@ -74,10 +75,12 @@ var App = {
                 position: 0
         },
 
-        //Estilos necesarios para el script
+        //Estilos necesarios para el script.
+        //Deben prefijarse para evitar repetir nombres de clases que ya pudiesen existir en la página (Me ha pasado!!!!)
+        //Mi prefijo será: smx-
         estilos: "" +
         "@font-face{" +
-                "font-family: FontAwesome;" +
+                "font-family: smx-FontAwesome;" +
                 "src:url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.eot?#iefix) format('eot')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.woff) format('woff')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.ttf) format('truetype')," +
@@ -85,7 +88,7 @@ var App = {
                 "font-weight:400;" +
                 "font-style:normal;" +
         "}" +
-        ".info {" +
+        ".smx-info {" +
                 "font: 14px/1.5 sans-serif;" +
                 "display: inline;" +
                 "background: #d04848;" +
@@ -103,10 +106,10 @@ var App = {
                 "border-radius: 5px;" +
                 "transition: width 0.3s ease-out;" +
         "}" + 
-        ".info-activo {" +
+        ".smx-info-activo {" +
                 "opacity: 1;" +
         "}" +
-        ".contenedor {" +
+        ".smx-contenedor {" +
                 "font: 14px/1.5 sans-serif;" +
                 "background: black;" +
                 "color: white;" +
@@ -121,30 +124,30 @@ var App = {
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "cursor: pointer;" +
         "}" +
-        ".contenedor-activo {" +
+        ".smx-contenedor-activo {" +
                 "opacity: 1;" +
         "}" +        
-        ".boton {" +
+        ".smx-boton {" +
                 "display: inline;" +
         "}" +           
-        ".boton:hover {" +
+        ".smx-boton:hover {" +
                 "opacity: 0.6;" +
         "}" +  
-        ".boton:active {" +
+        ".smx-boton:active {" +
                 "opacity: 0.3;" +
         "}" +                
-        ".eliminar {" +
-                "font-family: FontAwesome; " +
+        ".smx-eliminar {" +
+                "font-family: smx-FontAwesome; " +
                 "padding-left: 10px;" +
         "}" +
-        ".eliminar::after {" +
+        ".smx-eliminar::after {" +
                 "content: '\\f014';" +
                 "font-size: 1em;" +
         "}" +
-        ".eliminar:hover::after {" +
+        ".smx-eliminar:hover::after {" +
                 "opacity: 0.6;" +
         "}" +               
-        ".eliminar:active::after {" +
+        ".smx-eliminar:active::after {" +
                 "opacity: 0.3;" +
         "}",    
 
@@ -162,13 +165,13 @@ var App = {
                 $("head").append("<style>" + this.estilos + "</style>");
 
                 //Añado el botón de Ir al Marcador
-                $("body").append("<div class='contenedor'><div class='boton'>Ir al marcador!</div><span class='eliminar'></span></div><div class='info'>Marcador añadido</div>");
+                $("body").append("<div class='smx-contenedor'><div class='smx-boton'>Ir al marcador!</div><span class='smx-eliminar'></span></div><div class='smx-info'>Marcador añadido</div>");
                 
                 //Cacheo
-                this.btoIr = $(".boton");
-                this.infoNuevoMarcador = $(".info");
-                this.contenedor = $(".contenedor");
-                this.eliminar = $(".eliminar");
+                this.btoIr = $(".smx-boton");
+                this.infoNuevoMarcador = $(".smx-info");
+                this.contenedor = $(".smx-contenedor");
+                this.eliminar = $(".smx-eliminar");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -238,11 +241,12 @@ var App = {
                 $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
                 
                 this.activarBoton();
-
+                
+                var that = this;
                 //Muestra, mediante animación, que se ha añadido un marcador
-                $('.info').css('width', '320px')
+                this.infoNuevoMarcador.css('width', '320px')
                         .delay(2000).queue(function () {
-                                $('.info').css('width', '160px').dequeue();
+                                that.infoNuevoMarcador.css('width', '160px').dequeue();
                         });
                 log('Marcador añadido: ' + $(event.target)[0].tagName);
         },
@@ -254,14 +258,14 @@ var App = {
         },
         
         desactivarBoton: function () {
-                this.infoNuevoMarcador.removeClass("info-activo");
-                this.contenedor.removeClass("contenedor-activo").css("cursor", "text");
+                this.infoNuevoMarcador.removeClass("smx-info-activo");
+                this.contenedor.removeClass("smx-contenedor-activo").css("cursor", "text");
                 this.btoIr.text(util.textos.btoIrNoHayMarcador);
         },
         
         activarBoton: function () {
-                this.infoNuevoMarcador.addClass("info-activo");
-                this.contenedor.addClass("contenedor-activo").css("cursor", "pointer");
+                this.infoNuevoMarcador.addClass("smx-info-activo");
+                this.contenedor.addClass("smx-contenedor-activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador);
         }
 
