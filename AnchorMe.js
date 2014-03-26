@@ -21,8 +21,9 @@
  * Debe guardarse el marcador en localStorage para añadirlo al cargar la página
  *
  * TODO:
- * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje o se coloré o algo..
- * - Si no hay marcador en la página hacer que el botón no responda ante hover y click
+ * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje mejor que colorearse el fondo.
+ * - Si no hay marcador en la página hacer que el botón no responda ante hover y click.
+ * - ¿Añadir confirmación para borrar el marcador? Dudo.
  */
 
 /*
@@ -172,6 +173,10 @@ var App = {
         "}" +               
         ".smx-eliminar:active::after {" +
                 "opacity: 0.3;" +
+        "}" +
+        ".smx-marcable {" +
+                "background-color: #f4cece;" +
+                "" +
         "}",    
 
         loadScript: function () {
@@ -228,7 +233,13 @@ var App = {
         bindElements: function () {
                 
                 //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
-                $('h1, h2, h3, h4, p').on('dblclick', this.setMarcador.bind(this));
+                $("h1, h2, h3, h4, p").on("dblclick", this.setMarcador.bind(this));
+                $("h1, h2, h3, h4, p").on("mouseover", function () {
+                        $(this).addClass("smx-marcable");       
+                });
+                $("h1, h2, h3, h4, p").on("mouseout", function () {
+                        $(this).removeClass("smx-marcable");       
+                });                
                 this.eliminar.on("click", this.eliminarMarcador.bind(this));
 
                 var that = this;
