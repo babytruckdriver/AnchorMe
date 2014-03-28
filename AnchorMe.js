@@ -12,7 +12,7 @@
 // @version     0.1
 // @grant       none
 // ==/UserScript==
-// Puede que la página ya disponga de jQuery, por lo que no hay que importarlo
+// Puede que la página ya disponga de jQuery, por lo que no se importa por defecto
 // -@-require     http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js
 //
 /*
@@ -21,32 +21,31 @@
  * Debe guardarse el marcador en localStorage para añadirlo al cargar la página
  *
  * TODO:
- * - Al pasar el ratón por encima de un elemento "marcable" que aparezca un mensaje mejor que colorearse el fondo.
  * - Si no hay marcador en la página hacer que el botón no responda ante hover y click.
  * - ¿Añadir confirmación para borrar el marcador? Dudo.
  */
 
 /*
-        The MIT License (MIT)
-
-        Copyright (c) 2013 Samuel González Izquierdo
-
-        Permission is hereby granted, free of charge, to any person obtaining a copy of
-        this software and associated documentation files (the "Software"), to deal in
-        the Software without restriction, including without limitation the rights to
-        use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-        the Software, and to permit persons to whom the Software is furnished to do so,
-        subject to the following conditions:
-
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
-
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-        FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-        COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-        IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-        CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ The MIT License (MIT)
+ 
+ Copyright (c) 2013 Samuel González Izquierdo
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ this software and associated documentation files (the "Software"), to deal in
+ the Software without restriction, including without limitation the rights to
+ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ the Software, and to permit persons to whom the Software is furnished to do so,
+ subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 'use strict';
@@ -85,7 +84,9 @@ var util = {
         },
         textos: {
                 btoIrHayMarcador: "Ir al marcador!",
-                btoIrNoHayMarcador: "No hay marcador"
+                btoIrNoHayMarcador: "No hay marcador",
+                infoMarca: "Marcador añadido",
+                infoMarcable: "Marcable"
         }
 };
 
@@ -175,8 +176,18 @@ var App = {
                 "opacity: 0.3;" +
         "}" +
         ".smx-marcable {" +
+                "display: none;" +
+                "position: absolute;" +
+                "font-size: 14px; /*Si se utiliza 'em' se hereda el tamaño del contenedor*/" +
+                "font-weight: bold;" +
+                "width: 120px;" +
+                "text-align: center;" +
                 "background-color: #f4cece;" +
-                "" +
+                "color: white;" +
+                "opacity: 0.6;" +
+                "border-radius: 4px 4px 0 0;" +
+                "box-shadow: #b5b5b5 0 2px 6px 2px;" + 
+                "transform: translate(0, -18px); /*Lo mismo: transform:translateX(-18px);*/" +
         "}",    
 
         loadScript: function () {
@@ -193,13 +204,17 @@ var App = {
                 $("head").append("<style>" + this.estilos + "</style>");
 
                 //Añado el botón de Ir al Marcador
-                $("body").append("<div class='smx-contenedor'><div class='smx-boton'>Ir al marcador!</div><span class='smx-eliminar'></span></div><div class='smx-info'>Marcador añadido</div>");
+                $("body").append("<div class='smx-contenedor'><div class='smx-boton'>Ir al marcador!</div><span class='smx-eliminar'></span></div><div class='smx-info'>" + util.textos.infoMarca +"</div>");
+                
+                //Añado el mensaje que informa si el elemento sobre el que está el cursor es "marcable"
+                $("body").append("<div class='smx-marcable'>" + util.textos.infoMarcable + "</div>");
                 
                 //Cacheo
                 this.btoIr = $(".smx-boton");
                 this.infoNuevoMarcador = $(".smx-info");
                 this.contenedor = $(".smx-contenedor");
                 this.eliminar = $(".smx-eliminar");
+                this.marcable = $(".smx-marcable");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -207,6 +222,8 @@ var App = {
         agregarMarcadorAlmacenado: function () {
                 var marcadorTemporal = util.cache.getBookMark(this.key),
                         elementos;
+                
+                //Si hay un marcador para esta página
                 if (marcadorTemporal) {
                         //Colección de los elementos del tipo del elemento marcado
                         elementos = $(marcadorTemporal.type);
@@ -224,6 +241,7 @@ var App = {
                         
                         log("Marcador Temporal Almacenado agregado.");
                 } else {
+                        
                         //No existe marcador para esta página
                         this.desactivarBoton();
                 }
@@ -234,18 +252,24 @@ var App = {
                 
                 //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
                 $("h1, h2, h3, h4, p").on("dblclick", this.setMarcador.bind(this));
-                $("h1, h2, h3, h4, p").on("mouseover", function () {
-                        $(this).addClass("smx-marcable");       
-                });
-                $("h1, h2, h3, h4, p").on("mouseout", function () {
-                        $(this).removeClass("smx-marcable");       
-                });                
+                
+                $("h1, h2, h3, h4, p").on("mouseover", function (event) {
+                        // Mostrar etiqueta informativa de elementno "marcable";       
+                        $(event.target).prepend(this.marcable);
+                        this.marcable.css("margin-button","30px");
+                        this.marcable.show();
+                }.bind(this));  
+                
+                $("h1, h2, h3, h4, p").on("mouseout", function (event) {
+                        // Esconder etiqueta informativa de elementno "marcable";       
+                        this.marcable.hide();     
+                }.bind(this));                  
+                
                 this.eliminar.on("click", this.eliminarMarcador.bind(this));
 
-                var that = this;
                 this.btoIr.on('click', function () {
-                        window.location.hash = that.ANCHOR;
-                });
+                        window.location.hash = this.ANCHOR;
+                }.bind(this));
         },
 
         setMarcador: function (event) {
