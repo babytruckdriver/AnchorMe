@@ -22,7 +22,9 @@
  *
  * TODO:
  * - Si no hay marcador en la página hacer que el botón no responda ante hover y click.
- * - ¿Añadir confirmación para borrar el marcador? Dudo.
+ *   Para hacer esto no se me ocurre otra cosa que quitar el :hover y :active de CSS y controlarlos con Handlers de jQuery (mouseover y click).
+ *   No me gusta mucho la idea de desacerme del CSS.
+ * - Añadir confirmación para borrar el marcador Dudo. Un pequeño <span> que diga "Borrar" y al pincharle borre y desaparezca.
  */
 
 /*
@@ -61,7 +63,7 @@ var log = function (logString) {
 log('>>> Greasemonkey\'s working!');
 
 
-// Objeto de utilidades: Get y Set del marcador de la página
+// Objeto de utilidades: Get y Set del marcador de la página (a localStorage)
 var util = {
         cache: {
                 setBookMark: function (key, obj) {
@@ -86,7 +88,8 @@ var util = {
                 btoIrHayMarcador: "Ir al marcador!",
                 btoIrNoHayMarcador: "No hay marcador",
                 infoMarca: "Marcador añadido",
-                infoMarcable: "Marcable"
+                infoMarcable: "Marcable",
+                eliminar: "¿Eliminar?"
         }
 };
 
@@ -99,6 +102,7 @@ var App = {
                 type: "",
                 position: 0
         },
+        hayMarcador: false,
 
         //Estilos necesarios para el script.
         //Deben prefijarse para evitar repetir nombres de clases que ya pudiesen existir en la página (Me ha pasado!!!!)
@@ -131,9 +135,6 @@ var App = {
                 "border-radius: 5px;" +
                 "transition: width 0.3s ease-out;" +
         "}" + 
-        ".smx-info-activo {" +
-                "opacity: 1;" +
-        "}" +
         ".smx-contenedor {" +
                 "font: 14px/1.5 sans-serif;" +
                 "background: black;" +
@@ -148,10 +149,7 @@ var App = {
                 "border-radius: 5px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "cursor: pointer;" +
-        "}" +
-        ".smx-contenedor-activo {" +
-                "opacity: 1;" +
-        "}" +        
+        "}" +   
         ".smx-boton {" +
                 "display: inline;" +
         "}" +           
@@ -177,6 +175,7 @@ var App = {
         "}" +
         ".smx-marcable {" +
                 "display: none;" +
+                "box-sizing: border-box;" +
                 "position: absolute;" +
                 "font-size: 14px; /*Si se utiliza 'em' se hereda el tamaño del contenedor*/" +
                 "font-weight: bold;" +
@@ -188,6 +187,26 @@ var App = {
                 "border-radius: 4px 4px 0 0;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" + 
                 "transform: translate(0, -18px); /*Lo mismo: transform:translateX(-18px);*/" +
+        "}" +
+        ".smx-confirmar-eliminar {" +
+                "font: 14px/1.5 sans-serif;" +
+                "display: none;" +
+                "background: #d04848;" +
+                "color: white;" +
+                "text-align: center;" +
+                "box-sizing: border-box;" +
+                "position: fixed;" +
+                "z-index: 100000;" +
+                "top: 10px;" +
+                "left: 160px;" +
+                "width: 100px;" +
+                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
+                "border-radius: 10px;" +
+                "transition: width 0.3s ease-out;" +
+        "}" +
+        " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
+        ".activo {" +
+                "opacity: 1;" +
         "}",    
 
         loadScript: function () {
@@ -204,7 +223,10 @@ var App = {
                 $("head").append("<style>" + this.estilos + "</style>");
 
                 //Añado el botón de Ir al Marcador
-                $("body").append("<div class='smx-contenedor'><div class='smx-boton'>Ir al marcador!</div><span class='smx-eliminar'></span></div><div class='smx-info'>" + util.textos.infoMarca +"</div>");
+                $("body").append("<div class='smx-contenedor'><div class='smx-boton'>" + util.textos.btoIrHayMarcador + "</div><span class='smx-eliminar'></span></div><div class='smx-info'>" + util.textos.infoMarca +"</div>");
+
+                //Añado el mensaje de confirmación de eliminación de marcador
+                $("body").append("<span class='smx-confirmar-eliminar'>" + util.textos.eliminar + "</span>");
                 
                 //Añado el mensaje que informa si el elemento sobre el que está el cursor es "marcable"
                 $("body").append("<div class='smx-marcable'>" + util.textos.infoMarcable + "</div>");
@@ -215,6 +237,7 @@ var App = {
                 this.contenedor = $(".smx-contenedor");
                 this.eliminar = $(".smx-eliminar");
                 this.marcable = $(".smx-marcable");
+                this.confirmacionEliminar = $(".smx-confirmar-eliminar");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -238,8 +261,9 @@ var App = {
                         });
                         
                         this.activarBoton();
+                        this.hayMarcador = true;
                         
-                        log("Marcador Temporal Almacenado agregado.");
+                        log("Marcador Temporal Almacenado agregado a la página.");
                 } else {
                         
                         //No existe marcador para esta página
@@ -265,9 +289,13 @@ var App = {
                         this.marcable.hide();     
                 }.bind(this));                  
                 
-                this.eliminar.on("click", this.eliminarMarcador.bind(this));
+                this.eliminar.on("click", this.confirmarEliminar.bind(this));
+                this.confirmacionEliminar.on("click", this.eliminarMarcador.bind(this));
+                this.confirmacionEliminar.on("mouseout", function (event) {
+                        $(event.target).hide();       
+                }.bind(this));               
 
-                this.btoIr.on('click', function () {
+                this.btoIr.on("click", function () {
                         window.location.hash = this.ANCHOR;
                 }.bind(this));
         },
@@ -299,6 +327,7 @@ var App = {
                 $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
                 
                 this.activarBoton();
+                this.hayMarcador = true;
                 
                 var that = this;
                 //Muestra, mediante animación, que se ha añadido un marcador
@@ -309,21 +338,29 @@ var App = {
                 log('Marcador añadido: ' + $(event.target)[0].tagName);
         },
         
+        confirmarEliminar: function (event) {
+                if(this.hayMarcador) {
+                        this.confirmacionEliminar.show().css("cursor", "pointer");     
+                }
+        },
+        
         eliminarMarcador: function () {
+                this.confirmacionEliminar.hide();   
                 util.cache.deleteBookMark(this.key);
                 $("a[name='" + this.ANCHOR + "']").remove();
+                this.hayMarcador = false;
                 this.desactivarBoton();
         },
         
         desactivarBoton: function () {
-                this.infoNuevoMarcador.removeClass("smx-info-activo");
-                this.contenedor.removeClass("smx-contenedor-activo").css("cursor", "text");
+                this.infoNuevoMarcador.removeClass("activo");
+                this.contenedor.removeClass("activo").css("cursor", "text");
                 this.btoIr.text(util.textos.btoIrNoHayMarcador);
         },
         
         activarBoton: function () {
-                this.infoNuevoMarcador.addClass("smx-info-activo");
-                this.contenedor.addClass("smx-contenedor-activo").css("cursor", "pointer");
+                this.infoNuevoMarcador.addClass("activo");
+                this.contenedor.addClass("activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador);
         }
 
