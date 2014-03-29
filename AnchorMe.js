@@ -297,14 +297,16 @@ var App = {
                 }.bind(this));
                 this.confirmacionEliminar.on("mouseout", function (event) {
                         this.enConfirmacion = false;
-                        $(event.target).hide();
+                        var that = this;
+                        $(event.target).delay(500).queue(function () {
+                                that.confirmacionEliminar.hide().dequeue();
+                        }); 
                 }.bind(this));
                 
                 //Si el puntero no estaá sobre el mensaje de confirmación de eliminación, este debe ocultarse
                 this.eliminar.on("mouseout", function (event) {
                         var that = this;
-                        this.confirmacionEliminar.delay(1000).queue(function () {
-                                log("..." + that.enConfirmacion);
+                        this.confirmacionEliminar.delay(500).queue(function () {
                                 if(that.enConfirmacion !== true) {
                                         that.confirmacionEliminar.hide().dequeue();
                                 } else {
