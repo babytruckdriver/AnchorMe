@@ -103,6 +103,7 @@ var App = {
                 position: 0
         },
         hayMarcador: false,
+        enConfirmacion: false,
 
         //Estilos necesarios para el script.
         //Deben prefijarse para evitar repetir nombres de clases que ya pudiesen existir en la página (Me ha pasado!!!!)
@@ -197,11 +198,11 @@ var App = {
                 "box-sizing: border-box;" +
                 "position: fixed;" +
                 "z-index: 100000;" +
-                "top: 10px;" +
+                "top: 5px;" +
                 "left: 160px;" +
                 "width: 100px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
-                "border-radius: 10px;" +
+                "border-radius: 10px 10px 10px 0;" +
                 "transition: width 0.3s ease-out;" +
         "}" +
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
@@ -291,9 +292,26 @@ var App = {
                 
                 this.eliminar.on("click", this.confirmarEliminar.bind(this));
                 this.confirmacionEliminar.on("click", this.eliminarMarcador.bind(this));
+                this.confirmacionEliminar.on("mouseover", function (event) {
+                        this.enConfirmacion = true;
+                }.bind(this));
                 this.confirmacionEliminar.on("mouseout", function (event) {
-                        $(event.target).hide();       
-                }.bind(this));               
+                        this.enConfirmacion = false;
+                        $(event.target).hide();
+                }.bind(this));
+                
+                //Si el puntero no estaá sobre el mensaje de confirmación de eliminación, este debe ocultarse
+                this.eliminar.on("mouseout", function (event) {
+                        var that = this;
+                        this.confirmacionEliminar.delay(1000).queue(function () {
+                                log("..." + that.enConfirmacion);
+                                if(that.enConfirmacion !== true) {
+                                        that.confirmacionEliminar.hide().dequeue();
+                                } else {
+                                        that.confirmacionEliminar.dequeue(); 
+                                }
+                        });   
+                }.bind(this));                   
 
                 this.btoIr.on("click", function () {
                         window.location.hash = this.ANCHOR;
