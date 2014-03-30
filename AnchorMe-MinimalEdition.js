@@ -157,14 +157,19 @@ var App = {
                 "width: 320px;" +
         "}" +
         ".smx-boton {" +
-                "display: inline;" +
         "}" +           
         ".smx-boton:hover {" +
                 "opacity: 0.6;" +
         "}" +  
+        ".smx-boton-hover-off:hover {" +
+                "opacity: 1;" +
+        "}" +          
         ".smx-boton:active {" +
                 "opacity: 0.3;" +
-        "}" +                
+        "}" +     
+        ".smx-boton-active-off:active {" +
+                "opacity: 1;" +
+        "}" +         
         ".smx-eliminar {" +
                 "font-family: smx-FontAwesome; " +
                 "padding-left: 10px;" +
@@ -183,6 +188,12 @@ var App = {
         ".smx-eliminar:active::after {" +
                 "opacity: 0.3;" +
         "}" +
+        ".smx-eliminar-hover-off:hover::after {" +
+                "opacity: 1;" +
+        "}" +               
+        ".smx-eliminar-active-off:active::after {" +
+                "opacity: 1;" +
+        "}" +        
         ".smx-marcable {" +
                 "display: none;" +
                 "box-sizing: border-box;" +
@@ -191,6 +202,7 @@ var App = {
                 "font-weight: bold;" +
                 "width: 50px;" +
                 "heigth: 15px;" +
+                "line-height: 15px;" +
                 "text-align: center;" +
                 "background-color: #f4cece;" +
                 "color: white;" +
@@ -359,13 +371,15 @@ var App = {
         desactivarBoton: function () {
                 this.infoNuevoMarcador.removeClass("activo");
                 this.contenedor.removeClass("activo").css("cursor", "text");
-                this.btoIr.text(util.textos.btoIrNoHayMarcador);
+                this.btoIr.text(util.textos.btoIrNoHayMarcador).addClass("smx-boton-hover-off smx-boton-active-off");
+                this.eliminar.addClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
         activarBoton: function () {
                 this.infoNuevoMarcador.addClass("activo");
                 this.contenedor.addClass("activo").css("cursor", "pointer");
-                this.btoIr.text(util.textos.btoIrHayMarcador);
+                this.btoIr.text(util.textos.btoIrHayMarcador).removeClass("smx-boton-hover-off smx-boton-active-off");
+                this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
         }
 
 };
