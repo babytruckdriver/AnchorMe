@@ -85,7 +85,7 @@ var util = {
                 btoIrHayMarcador: "Ir al marcador!",
                 btoIrNoHayMarcador: "No hay marcador",
                 infoMarca: "Marcador añadido",
-                infoMarcable: "Marcable",
+                infoMarcable: "M",
                 eliminar: "¿Eliminar?"
         }
 };
@@ -101,6 +101,7 @@ var App = {
         },
         hayMarcador: false,
         enConfirmacion: false,
+        confirmacionEliminacion: false,
 
         //Estilos necesarios para el script.
         //Deben prefijarse para evitar repetir nombres de clases que ya pudiesen existir en la página (Me ha pasado!!!!)
@@ -127,10 +128,10 @@ var App = {
                 "position: fixed;" +
                 "z-index: 99998;" +
                 "top: 10px;" +
-                "left: 10px;" +
+                "left: -155px;" +
                 "width: 160px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
-                "border-radius: 5px;" +
+                "border-radius: 5px 2px 2px 5px;" +
                 "transition: width 0.3s ease-out;" +
         "}" + 
         ".smx-contenedor {" +
@@ -142,12 +143,19 @@ var App = {
                 "position: fixed;" +
                 "z-index: 99999;" +
                 "top: 10px;" +
-                "left: 10px;" +
+                "left: -155px;" +
                 "width: 160px;" +
-                "border-radius: 5px;" +
+                "text-align: right;" +
+                "box-sizing: border-box;" +
+                "padding-right: 10px;" +
+                "border-radius: 5px 2px 2px 5px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "cursor: pointer;" +
+                "transition: width 0.3s ease-out;" +
         "}" +   
+        ".smx-contenedor:hover {" +    
+                "width: 320px;" +
+        "}" +
         ".smx-boton {" +
                 "display: inline;" +
         "}" +           
@@ -165,6 +173,10 @@ var App = {
                 "content: '\\f014';" +
                 "font-size: 1em;" +
         "}" +
+        ".smx-eliminar-confirmar::after {" +
+                "content: '\\f057';" +
+                "font-size: 1em;" +
+        "}" +        
         ".smx-eliminar:hover::after {" +
                 "opacity: 0.6;" +
         "}" +               
@@ -175,32 +187,17 @@ var App = {
                 "display: none;" +
                 "box-sizing: border-box;" +
                 "position: absolute;" +
-                "font-size: 14px; /*Si se utiliza 'em' se hereda el tamaño del contenedor*/" +
+                "font-size: 10px; /*Si se utiliza 'em' se hereda el tamaño del contenedor*/" +
                 "font-weight: bold;" +
-                "width: 120px;" +
+                "width: 50px;" +
+                "heigth: 15px;" +
                 "text-align: center;" +
                 "background-color: #f4cece;" +
                 "color: white;" +
                 "opacity: 0.6;" +
                 "border-radius: 4px 4px 0 0;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" + 
-                "transform: translate(0, -18px); /*Lo mismo: transform:translateX(-18px);*/" +
-        "}" +
-        ".smx-confirmar-eliminar {" +
-                "font: 14px/1.5 sans-serif;" +
-                "display: none;" +
-                "background: #d04848;" +
-                "color: white;" +
-                "text-align: center;" +
-                "box-sizing: border-box;" +
-                "position: fixed;" +
-                "z-index: 100000;" +
-                "top: 5px;" +
-                "left: 160px;" +
-                "width: 100px;" +
-                "box-shadow: #b5b5b5 0 2px 6px 2px;" +
-                "border-radius: 10px 10px 10px 0;" +
-                "transition: width 0.3s ease-out;" +
+                "transform: translate(0, -14px); /*Lo mismo: transform:translateX(-18px);*/" +
         "}" +
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
         ".activo {" +
@@ -285,36 +282,19 @@ var App = {
                 $("h1, h2, h3, h4, p").on("mouseout", function (event) {
                         // Esconder etiqueta informativa de elementno "marcable";       
                         this.marcable.hide();     
-                }.bind(this));                  
+                }.bind(this));      
                 
-                this.eliminar.on("click", this.confirmarEliminar.bind(this));
-                this.confirmacionEliminar.on("click", this.eliminarMarcador.bind(this));
-                this.confirmacionEliminar.on("mouseover", function (event) {
-                        this.enConfirmacion = true;
-                }.bind(this));
-                this.confirmacionEliminar.on("mouseout", function (event) {
-                        this.enConfirmacion = false;
-                        var that = this;
-                        $(event.target).delay(500).queue(function () {
-                                that.confirmacionEliminar.hide().dequeue();
-                        }); 
-                }.bind(this));
-                
-                //Si el puntero no estaá sobre el mensaje de confirmación de eliminación, este debe ocultarse
-                this.eliminar.on("mouseout", function (event) {
-                        var that = this;
-                        this.confirmacionEliminar.delay(500).queue(function () {
-                                if(that.enConfirmacion !== true) {
-                                        that.confirmacionEliminar.hide().dequeue();
-                                } else {
-                                        that.confirmacionEliminar.dequeue(); 
-                                }
-                        });   
-                }.bind(this));                   
-
                 this.btoIr.on("click", function () {
                         window.location.hash = this.ANCHOR;
+                }.bind(this));          
+                
+                this.eliminar.on("click", this.confirmarEliminar.bind(this));
+                
+                this.contenedor.on("mouseover", function () {
+                        this.confirmacionEliminacion = false;
+                        this.eliminar.removeClass("smx-eliminar-confirmar"); 
                 }.bind(this));
+
         },
 
         setMarcador: function (event) {
@@ -356,8 +336,15 @@ var App = {
         },
         
         confirmarEliminar: function (event) {
-                if(this.hayMarcador) {
-                        this.confirmacionEliminar.show().css("cursor", "pointer");     
+                if(this.hayMarcador) {   
+                        if(!this.confirmacionEliminacion) {
+                                this.eliminar.addClass("smx-eliminar-confirmar");
+                                this.confirmacionEliminacion = true;
+                        } else {
+                                this.confirmacionEliminacion = false;
+                                this.eliminar.removeClass("smx-eliminar-confirmar"); 
+                                this.eliminarMarcador();
+                        }
                 }
         },
         
