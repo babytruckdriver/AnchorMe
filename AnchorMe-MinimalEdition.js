@@ -157,6 +157,7 @@ var App = {
                 "width: 320px;" +
         "}" +
         ".smx-boton {" +
+                "display: inline;" +
         "}" +           
         ".smx-boton:hover {" +
                 "opacity: 0.6;" +
@@ -181,7 +182,11 @@ var App = {
         ".smx-eliminar-confirmar::after {" +
                 "content: '\\f057';" +
                 "font-size: 1em;" +
-        "}" +        
+        "}" +      
+        ".smx-eliminar-confirmar-off::after {" +
+                "content: '';" +
+                "font-size: 1em;" +
+        "}" +           
         ".smx-eliminar:hover::after {" +
                 "opacity: 0.6;" +
         "}" +               
@@ -231,9 +236,6 @@ var App = {
 
                 //Añado el botón de Ir al Marcador
                 $("body").append("<div class='smx-contenedor'><div class='smx-boton'>" + util.textos.btoIrHayMarcador + "</div><span class='smx-eliminar'></span></div><div class='smx-info'>" + util.textos.infoMarca +"</div>");
-
-                //Añado el mensaje de confirmación de eliminación de marcador
-                $("body").append("<span class='smx-confirmar-eliminar'>" + util.textos.eliminar + "</span>");
                 
                 //Añado el mensaje que informa si el elemento sobre el que está el cursor es "marcable"
                 $("body").append("<div class='smx-marcable'>" + util.textos.infoMarcable + "</div>");
@@ -244,7 +246,6 @@ var App = {
                 this.contenedor = $(".smx-contenedor");
                 this.eliminar = $(".smx-eliminar");
                 this.marcable = $(".smx-marcable");
-                this.confirmacionEliminar = $(".smx-confirmar-eliminar");
         },
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
@@ -360,8 +361,7 @@ var App = {
                 }
         },
         
-        eliminarMarcador: function () {
-                this.confirmacionEliminar.hide();   
+        eliminarMarcador: function () {  
                 util.cache.deleteBookMark(this.key);
                 $("a[name='" + this.ANCHOR + "']").remove();
                 this.hayMarcador = false;
