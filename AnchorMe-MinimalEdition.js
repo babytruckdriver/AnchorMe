@@ -64,31 +64,68 @@ var util = {
         cache: {
                 //Key del objecto de marcadores a guardar en localStorage
                 BM_KEY: "ANCHORME",
-                setBookMark: function (key, obj) {
-                        log("key:" + key + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.tip: " + obj.tip);
-                        //localStorage.setItem(key, JSON.stringify(obj));
+                //Construye el tipo de objeto que espera el método 'setBookMark'
+                bookMarckObject: function () {
+                        return {
+                                id: 0,
+                                type: "",
+                                position: 0,
+                                tip: ""  
+                        };
+                },
+                setBookMark: function (obj) {
+                        //TODO cerciorarse de que 'obj' es del tipo requerido. Con 'InstanceOf' o algo así.
+                        //Se crea un identificador único para este marcador
+                        obj.id = new Date().getTime();
+                        
+                        log("obj.id:" + obj.id + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.tip: " + obj.tip);
                         
                         var bookMarks = localStorage.getItem(this.BM_KEY);
                         if(bookMarks) {
                                 bookMarks = JSON.parse(bookMarks);     
-                                bookMarks[key] = obj;
+                                bookMarks.push(obj);
                         } else {
                                 //Si no existe aún un objeto de marcadores en localStorage lo creamos
-                                bookMarks = {};
-                                bookMarks[key] = obj;
+                                bookMarks = [];
+                                bookMarks.push(obj);
                         }
                         
                         localStorage.setItem(this.BM_KEY, JSON.stringify(bookMarks));
                         
                 },
-                getBookMark: function (key) {
-                        var bookMarks = localStorage.getItem(this.BM_KEY);
+                //Retorna el marcador 'principal'
+                getBookMark: function () {
+                        var bookMarks = localStorage.getItem(this.BM_KEY),
+                            ids = [],
+                            idMarcadorActivo,
+                            marcadorAtivo;
+                        
                         if(bookMarks) {
-                                bookMarks = JSON.parse(bookMarks);     
-                                return bookMarks[key];
+                                bookMarks = JSON.parse(bookMarks);  
+                                
+                                $.each(bookMarks, function () {
+                                        ids.push(this.id);
+                                });
+                                
+                                //Id más alto. Al ser una fecha es el marcador más reciente
+                                idMarcadorActivo = Math.max.apply(null, ids);
+                                
+                                //CHANGES: El algoritmo no me gusta demasiado. Tener que recorrer el Array dos veces me irrita!!
+                                //Es posible que el marcador más moderno siempre sea el último y nos podamos ahorrar dos dos 'each'
+                                $.each(bookMarks, function () {
+                                        if(this.id === idMarcadorActivo) {
+                                                marcadorAtivo = this;
+                                                return false; //Es la única manera de que el loop no continue. 'break' no funciona.
+                                        }
+                                });
+                                
+                                if(marcadorAtivo) {
+                                        return marcadorAtivo;
+                                }
                         } 
                         return undefined;
                 },
+                //Retorna todos los marcadores escepto el 'principal'
                 getBookMarksHistory: function () {
                         var bookMarks = localStorage.getItem(this.BM_KEY);
                         if(bookMarks) {
@@ -97,16 +134,17 @@ var util = {
                         } 
                         return undefined;                              
                 },
-                deleteBookMark: function (key) {
+                deleteBookMark: function () {
                         
                         var bookMarks = localStorage.getItem(this.BM_KEY);
                         if(bookMarks) {
                                 bookMarks = JSON.parse(bookMarks);     
-                                delete bookMarks[key];
+                                //Borra el bookmark más actual, que es el último de la lista
+                                bookMarks.length -= 1;
                                 
                                 localStorage.setItem(this.BM_KEY, JSON.stringify(bookMarks));
                         }                        
-                        log("Marcador eliminado para página: " + key);
+                        log("Marcador eliminado");
                 }
         },
         textos: {
@@ -121,11 +159,9 @@ var util = {
 
 //Objeto principal de la aplicación
 var App = {
-
-        key: window.location.href.split("#")[0],
         ANCHOR: "smuxAnchor",
         marcador: {
-                main: true, //Por defecto cualquier marcador grabado será el principal
+                id: 0,
                 type: "",
                 position: 0,
                 tip: ""
@@ -264,6 +300,7 @@ var App = {
         "}" +        
         ".smx-contenedor-marcadores {" +
                 "display: none;" +
+                "overflow: scroll;" +
                 "font: 14px/1.5 Courier New, monospace;" +
                 "background: black;" +
                 "color: white;" +
@@ -289,7 +326,7 @@ var App = {
         loadScript: function () {
                 this.cargarInterfaz();
                 this.agregarMarcadorAlmacenado();
-                this.mostrarHistoricoMarcadores();
+                this.cargarHistoricoMarcadores();
                 this.bindElements();
                 
         },
@@ -310,7 +347,7 @@ var App = {
                 //Añade contenedor de marcadores almacenados en memoria local (localStorage)
                 $("body").append("<div class='smx-contenedor-marcadores'>" + util.textos.historicoMarcadores + "</div>");
                 
-                //Cacheo
+                //Cacheo de elementos
                 this.btoIr = $(".smx-boton");
                 this.infoNuevoMarcador = $(".smx-info");
                 this.contenedor = $(".smx-contenedor");
@@ -323,8 +360,8 @@ var App = {
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
         // y añade en el lugar adecuado <a name="marcador"></a>    
         agregarMarcadorAlmacenado: function () {
-                var marcadorTemporal = util.cache.getBookMark(this.key),
-                        elementos;
+                var marcadorTemporal = util.cache.getBookMark(),
+                    elementos;
                 
                 //Si hay un marcador para esta página
                 if (marcadorTemporal) {
@@ -398,30 +435,30 @@ var App = {
                 //Machaca si existe un marcador anterior
                 $("a[name='" + this.ANCHOR + "']").remove();
                 
-                this.marcador.type = $(event.target)[0].tagName;
-
-                var that = this;
+                var marcador = new util.cache.bookMarckObject();
+                
+                marcador.type = $(event.target)[0].tagName;
 
                 //Selector con todos los elementos del mismo tipo que el seleccionado
                 var elementos = $($(event.target)[0].tagName);
                 $.each(elementos, function (i) {
                         if (this === event.target) {
-                                that.marcador.position = i;
-                                that.marcador.tip = $.trim($(this).text().slice(1, 50)).slice(0,25) + "...";
+                                marcador.position = i;
+                                marcador.tip = $.trim($(this).text().slice(1, 50)).slice(0,25) + "...";
                         }
                 });
-                
-                //Se crea una clave única para este marcador
-                this.key = new Date().getTime();
 
                 //Guarda en localStorage el marcador de la página
-                util.cache.setBookMark(this.key, this.marcador);
+                util.cache.setBookMark(marcador);
                 
                 //Se incluye el marcador en la página para ser usuado en esta sesión
                 $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
                 
                 this.activarBoton();
                 this.hayMarcador = true;
+                
+                var that = this;
+                
                 //Muestra, mediante animación, que se ha añadido un marcador
                 this.infoNuevoMarcador.css('width', '320px')
                         .delay(2000).queue(function () {
@@ -444,7 +481,7 @@ var App = {
         },
         
         eliminarMarcador: function () {
-                util.cache.deleteBookMark(this.key);
+                util.cache.deleteBookMark();
                 $("a[name='" + this.ANCHOR + "']").remove();
                 this.hayMarcador = false;
                 this.desactivarBoton();
@@ -465,12 +502,17 @@ var App = {
                 this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
-        mostrarHistoricoMarcadores: function () {
+        cargarHistoricoMarcadores: function () {
                 //Recupera de localStorage todos los marcadores almacenados y los muestra
-                var marcadores = util.cache.getBookMarksHistory();
+                var marcadores = util.cache.getBookMarksHistory(),
+                    marcadoresHTML = "";
+                
                 if(marcadores) {
-                        //NOTE: 'keys' devuelve solo propiedades, no métodos. Para incluir los métodos utilizar 'getOwnPropertyNames'
-                        log(Object.keys(marcadores));
+                        log(marcadores);
+                        $.each(marcadores, function () {
+                                marcadoresHTML += "<div>" + this.tip + "</div>";
+                        });
+                        this.contenedorMarcadores.append(marcadoresHTML);
                 } else {
                         log("No hay marcadores");
                 }
