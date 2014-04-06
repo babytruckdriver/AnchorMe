@@ -218,7 +218,7 @@ var App = {
                 "border-radius: 5px 2px 2px 5px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "cursor: pointer;" +
-                "transition: width 0.3s ease-out;" +
+                "transition: width 0.3s ease-out 0.2s;" +
         "}" +   
         ".smx-contenedor:hover {" +    
                 "width: 355px;" +
@@ -300,7 +300,7 @@ var App = {
         "}" +        
         ".smx-contenedor-marcadores {" +
                 "display: none;" +
-                "overflow: scroll;" +
+                "overflow: auto;" +
                 "font: 14px/1.5 Courier New, monospace;" +
                 "background: black;" +
                 "color: white;" +
@@ -310,14 +310,18 @@ var App = {
                 "z-index: 99999;" +
                 "top: 15px;" +
                 "left: 10px;" +
-                "width: 300px;" +
+                "width: 350px;" +
                 "height: 300px;" +
                 "box-sizing: border-box;" +
-                "padding: 10px;" +
+                "padding: 20px 20px 20px 20px;" +
                 "border-radius: 5px 5px 5px 5px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "/*transition: height 0.3s ease-out;*/" +
         "}" +         
+        ".smx-marcador-historico {" +
+                "text-align: left;" +
+                "cursor: pointer;" +
+        "}" +
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
         ".activo {" +
                 "opacity: 1;" +
@@ -345,7 +349,7 @@ var App = {
                 $("body").append("<div class='smx-marcable'>" + util.textos.infoMarcable + "</div>");
                 
                 //Añade contenedor de marcadores almacenados en memoria local (localStorage)
-                $("body").append("<div class='smx-contenedor-marcadores'>" + util.textos.historicoMarcadores + "</div>");
+                $("body").append("<div class='smx-contenedor-marcadores'>" + util.textos.historicoMarcadores + "<ul></ul></div>");
                 
                 //Cacheo de elementos
                 this.btoIr = $(".smx-boton");
@@ -421,11 +425,11 @@ var App = {
                         this.contenedorMarcadores.show();       
                 }.bind(this));
                 
-                this.contenedorMarcadores.on("mouseout", function (event) {
-                        $(event.target).delay(500).queue(function () {
-                                $(event.target).hide("fast").dequeue();
+                this.contenedorMarcadores.on("mouseleave", function (event) {
+                        $(this).delay(500).queue(function () {
+                                $(this).hide("fast").dequeue();
                         });
-                }.bind(this));
+                });
 
         },
 
@@ -456,6 +460,9 @@ var App = {
                 
                 this.activarBoton();
                 this.hayMarcador = true;
+                
+                //Actualiza el panel de histórico de marcadores
+                this.cargarHistoricoMarcadores();
                 
                 var that = this;
                 
@@ -505,13 +512,23 @@ var App = {
         cargarHistoricoMarcadores: function () {
                 //Recupera de localStorage todos los marcadores almacenados y los muestra
                 var marcadores = util.cache.getBookMarksHistory(),
-                    marcadoresHTML = "";
+                    marcadoresHTML = ""; 
                 
+                //Primero se borra todo el historico de marcadores para luego volver a cargarlo actualizado
+                //Este selector no se puede cachear en la carga de la página porque en ese momento no existen los elementos a seleccionar.
+                $(".smx-marcador-historico").remove();
+                
+                //NOTE: no es buena idea utilizar elementos 'ul' ya que es muy probable que la página tenga estilos por defecto para ese elemento
                 if(marcadores) {
                         log(marcadores);
+                        //TODO: Mostrar también la hora, minutos y segundos
                         $.each(marcadores, function () {
-                                marcadoresHTML += "<div>" + this.tip + "</div>";
+                                marcadoresHTML = "<div class='smx-marcador-historico'>" + this.tip + "</div>" + marcadoresHTML;
                         });
+                        
+                        //El primero es un elemnto vacío para dejar espacio entre el título y el contenido
+                        marcadoresHTML = "<div></div>" + marcadoresHTML;
+                        
                         this.contenedorMarcadores.append(marcadoresHTML);
                 } else {
                         log("No hay marcadores");
