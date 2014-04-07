@@ -93,6 +93,7 @@ var util = {
                         localStorage.setItem(this.BM_KEY, JSON.stringify(bookMarks));
                         
                 },
+                //NOTE: Actualmente este método no se utiliza.
                 //Retorna el marcador 'principal'
                 getBookMark: function () {
                         var bookMarks = localStorage.getItem(this.BM_KEY),
@@ -138,7 +139,7 @@ var util = {
                         var tempBMArr = [];
                         
                         if (idBookMark) {
-                                //TODO: Borrar marcador que coincida con idBookMark
+                                //Borrar marcador que coincida con idBookMark
                                 var bookMarks = localStorage.getItem(this.BM_KEY);
                                 if (bookMarks) {
                                         bookMarks = JSON.parse(bookMarks);
@@ -537,7 +538,7 @@ var App = {
                 this.infoNuevoMarcador.addClass("activo");
                 this.contenedor.addClass("activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador).removeClass("smx-boton-hover-off smx-boton-active-off");
-                //TODO: Desactivar la papelera cuando no quede ningún marcador
+                //TODO: Activar la papelera cuando no quede ningún marcador
                 //this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
