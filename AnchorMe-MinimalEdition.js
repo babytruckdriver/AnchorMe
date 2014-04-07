@@ -20,9 +20,6 @@
  * Solo se permite un marcador, así que si se vuelve a hacer doble click el primer marcador se elimina.
  *
  * TODO:
- * - En histórico: primer marcador, que es el activo, poner en negrita
- * - En histórico: al borrar marcador activo actualizar el marcador de la página <a name="anchor...
- * - En histórico: el onclik de un marcador borra. Solucionar.
  * - En histórico: Añadir icono (o algo) para poder hacer un marcador principal (el onclick en marcadores no va al marcador)
  */
 
@@ -240,7 +237,7 @@ var App = {
         "}" +
         ".smx-boton {" +
                 "display: inline;" +
-                "font-weight: bold;" +
+                "font-weight: 800; /*'bold' es insuficiente*/" +
         "}" +           
         ".smx-boton:hover {" +
                 "opacity: 0.6;" +
@@ -342,19 +339,14 @@ var App = {
         "}" +
         ".smx-marcador-historico {" +
                 "text-align: left;" +
-                "cursor: pointer;" +
                 "background-color: black;" +
                 "margin: 5px;" +
                 "border-radius: 2px;" +        
-        "}" +
-        ".smx-marcador-historico:first {" +
-                "text-align: left;" +
-                "font-weight: bold;" +
-                "cursor: pointer;" +
-                "background-color: black;" +
-                "margin: 5px;" +
-                "border-radius: 2px;" +        
-        "}" +        
+        "}" +     
+        ".smx-marcador-principal{" +
+                "font-weight: bold;" + 
+                "color: rgb(247, 146, 146);" +
+        "}" +           
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
         ".activo {" +
                 "opacity: 1;" +
@@ -362,7 +354,6 @@ var App = {
 
         loadScript: function () {
                 this.cargarInterfaz();
-                this.agregarMarcadorAlmacenado();
                 this.cargarHistoricoMarcadores();
                 this.bindElements();
                 
@@ -396,34 +387,24 @@ var App = {
 
         // Función ejecutada al iniciar que recoge de localStorage el marcador 
         // y añade en el lugar adecuado <a name="marcador"></a>    
-        agregarMarcadorAlmacenado: function () {
-                var marcadorTemporal = util.cache.getBookMark(),
-                    elementos;
+        agregarMarcadorAlmacenado: function (marcador) {
+                var elementos;
                 
                 //Si hay un marcador para esta página
-                if (marcadorTemporal) {
+                if (marcador) {
                         //Colección de los elementos del tipo del elemento marcado
-                        elementos = $(marcadorTemporal.type);
+                        elementos = $(marcador.type);
                         var that = this;
 
                         $.each(elementos, function (i) {
-                                if (i === marcadorTemporal.position) {
+                                if (i === marcador.position) {
                                         $(this).before("<a name='" + that.ANCHOR + "'></a>");
-                                        //FIXME: Por alguna razón 'break' falla ?¿?¿?
-                                        //break;
+                                        return false;
                                 }
                         });
                         
-                        this.activarBoton();
-                        this.hayMarcador = true;
-                        
                         log("Marcador Temporal Almacenado agregado a la página.");
-                } else {
-                        
-                        //No existe marcador para esta página
-                        this.desactivarBoton();
-                }
-                
+                } 
         },
 
         bindElements: function () {
@@ -581,18 +562,27 @@ var App = {
                         
                         this.contenedorMarcadores.append(marcadoresHTML);
                         
-                        //Añadir manejador para el evento 'click' sobre los marcadores cargados
-                        $(".smx-marcador-historico").on("click", this.confirmarEliminar.bind(this)); 
+                        //Añadir el marcador principal a la página
+                        this.agregarMarcadorAlmacenado(marcadores[marcadores.length - 1]);
                         
-                        $(".smx-marcador-historico").on("mouseout", function (event) {
+                        $(".smx-marcador-historico:first").addClass("smx-marcador-principal");
+                        
+                        //Añadir manejadores para el evento 'click' y 'mouseout' sobre los marcadores cargados
+                        $(".smx-eliminar").on("click", this.confirmarEliminar.bind(this)); 
+                        
+                        $(".smx-eliminar").on("mouseout", function (event) {
                                 this.confirmacionEliminacion = false;
                                 $(event.target).removeClass("smx-eliminar-confirmar");
                         }.bind(this));
+                        
+                        this.activarBoton();
+                        this.hayMarcador = true;
                         
                         return true;
                         
                 } else {
                         log("No hay marcadores");
+                        this.hayMarcador = false;
                         return false;
                 }
                 
