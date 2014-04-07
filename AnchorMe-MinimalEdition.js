@@ -20,7 +20,10 @@
  * Solo se permite un marcador, así que si se vuelve a hacer doble click el primer marcador se elimina.
  *
  * TODO:
- * - 
+ * - En histórico: primer marcador, que es el activo, poner en negrita
+ * - En histórico: al borrar marcador activo actualizar el marcador de la página <a name="anchor...
+ * - En histórico: el onclik de un marcador borra. Solucionar.
+ * - En histórico: Añadir icono (o algo) para poder hacer un marcador principal (el onclick en marcadores no va al marcador)
  */
 
 /*
@@ -70,7 +73,7 @@ var util = {
                                 id: 0,
                                 type: "",
                                 position: 0,
-                                tip: ""  
+                                tip: ""
                         };
                 },
                 setBookMark: function (obj) {
@@ -81,8 +84,8 @@ var util = {
                         log("obj.id:" + obj.id + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.tip: " + obj.tip);
                         
                         var bookMarks = localStorage.getItem(this.BM_KEY);
-                        if(bookMarks) {
-                                bookMarks = JSON.parse(bookMarks);     
+                        if (bookMarks) {
+                                bookMarks = JSON.parse(bookMarks);
                                 bookMarks.push(obj);
                         } else {
                                 //Si no existe aún un objeto de marcadores en localStorage lo creamos
@@ -100,8 +103,8 @@ var util = {
                             idMarcadorActivo,
                             marcadorAtivo;
                         
-                        if(bookMarks) {
-                                bookMarks = JSON.parse(bookMarks);  
+                        if (bookMarks) {
+                                bookMarks = JSON.parse(bookMarks);
                                 
                                 $.each(bookMarks, function () {
                                         ids.push(this.id);
@@ -113,38 +116,50 @@ var util = {
                                 //CHANGES: El algoritmo no me gusta demasiado. Tener que recorrer el Array dos veces me irrita!!
                                 //Es posible que el marcador más moderno siempre sea el último y nos podamos ahorrar dos dos 'each'
                                 $.each(bookMarks, function () {
-                                        if(this.id === idMarcadorActivo) {
+                                        if (this.id === idMarcadorActivo) {
                                                 marcadorAtivo = this;
                                                 return false; //Es la única manera de que el loop no continue. 'break' no funciona.
                                         }
                                 });
                                 
-                                if(marcadorAtivo) {
+                                if (marcadorAtivo) {
                                         return marcadorAtivo;
                                 }
-                        } 
+                        }
                         return undefined;
                 },
                 //Retorna todos los marcadores escepto el 'principal'
                 getBookMarksHistory: function () {
                         var bookMarks = localStorage.getItem(this.BM_KEY);
-                        if(bookMarks) {
-                                bookMarks = JSON.parse(bookMarks); 
+                        if (bookMarks) {
+                                bookMarks = JSON.parse(bookMarks);
                                 return bookMarks;
-                        } 
-                        return undefined;                              
+                        }
+                        return undefined;
                 },
-                deleteBookMark: function () {
+                deleteBookMark: function (idBookMark) {
+                        var tempBMArr = [];
                         
-                        var bookMarks = localStorage.getItem(this.BM_KEY);
-                        if(bookMarks) {
-                                bookMarks = JSON.parse(bookMarks);     
-                                //Borra el bookmark más actual, que es el último de la lista
-                                bookMarks.length -= 1;
-                                
-                                localStorage.setItem(this.BM_KEY, JSON.stringify(bookMarks));
-                        }                        
-                        log("Marcador eliminado");
+                        if (idBookMark) {
+                                //TODO: Borrar marcador que coincida con idBookMark
+                                var bookMarks = localStorage.getItem(this.BM_KEY);
+                                if (bookMarks) {
+                                        bookMarks = JSON.parse(bookMarks);
+                                        //Borra el bookmark más actual, que es el último de la lista
+                                        $.each(bookMarks, function () {
+                                                if (this.id !== idBookMark) {
+                                                        tempBMArr.push(this); 
+                                                }
+                                        });
+
+                                        localStorage.setItem(this.BM_KEY, JSON.stringify(tempBMArr));
+                                }
+                                log("Marcador eliminado");
+                        } else {
+                        //Borrar todos los marcadores
+                                localStorage.clear();
+                                log("Todos los marcadores eliminados");
+                        }
                 }
         },
         textos: {
@@ -180,7 +195,7 @@ var App = {
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.woff) format('woff')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.ttf) format('truetype')," +
                 "url(https://netdna.bootstrapcdn.com/font-awesome/2.0/font//fontawesome-webfont.svg#FontAwesome) format('svg');" +
-                "font-weight:400;" +
+                "font-weight :400;" +
                 "font-style:normal;" +
         "}" +
         ".smx-info {" +
@@ -210,8 +225,8 @@ var App = {
                 "position: fixed;" +
                 "z-index: 99998;" +
                 "top: 10px;" +
-                "left: -175px;" +
-                "width: 180px;" +
+                "left: -150px;" +
+                "width: 160px;" +
                 "text-align: right;" +
                 "box-sizing: border-box;" +
                 "padding-right: 10px;" +
@@ -221,7 +236,7 @@ var App = {
                 "transition: width 0.3s ease-out 0.2s;" +
         "}" +   
         ".smx-contenedor:hover {" +    
-                "width: 355px;" +
+                "width: 310px;" +
         "}" +
         ".smx-boton {" +
                 "display: inline;" +
@@ -241,7 +256,8 @@ var App = {
         "}" +         
         ".smx-eliminar {" +
                 "font-family: smx-FontAwesome; " +
-                "padding-left: 10px;" +
+                "padding: 10px;" +
+                "cursor: pointer;" +
         "}" +
         ".smx-eliminar::after {" +
                 "content: '\\f014';" +
@@ -302,9 +318,8 @@ var App = {
                 "display: none;" +
                 "overflow: auto;" +
                 "font: 14px/1.5 Courier New, monospace;" +
-                "background: black;" +
+                "background-color: rgba(0, 0, 0, 0.6);" +
                 "color: white;" +
-                "opacity: 0.6;" +
                 "text-align: center;" +
                 "position: fixed;" +
                 "z-index: 99999;" +
@@ -317,11 +332,29 @@ var App = {
                 "border-radius: 5px 5px 5px 5px;" +
                 "box-shadow: #b5b5b5 0 2px 6px 2px;" +
                 "/*transition: height 0.3s ease-out;*/" +
-        "}" +         
+        "}" +
+        ".smx-titulo-historico {" +
+                "font-weight: bold;" +
+                "text-shadow: 1px 1px 2px black;" +
+                "background-color: rgb(247, 146, 146);" +
+                "margin: 5px;" +
+                "border-radius: 2px;" +
+        "}" +
         ".smx-marcador-historico {" +
                 "text-align: left;" +
                 "cursor: pointer;" +
+                "background-color: black;" +
+                "margin: 5px;" +
+                "border-radius: 2px;" +        
         "}" +
+        ".smx-marcador-historico:first {" +
+                "text-align: left;" +
+                "font-weight: bold;" +
+                "cursor: pointer;" +
+                "background-color: black;" +
+                "margin: 5px;" +
+                "border-radius: 2px;" +        
+        "}" +        
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
         ".activo {" +
                 "opacity: 1;" +
@@ -343,13 +376,13 @@ var App = {
 
                 //Añado el botón de Ir al Marcador
                 $("body").append("<div class='smx-contenedor'><span class='smx-lista-marcadores'></span><div class='smx-boton'>" + util.textos.btoIrHayMarcador + "</div>" +
-                                 "<span class='smx-eliminar'></span></div><div class='smx-info'>" + util.textos.infoMarca + "</div>");
+                                 "</div><div class='smx-info'>" + util.textos.infoMarca + "</div>");
                 
                 //Añado el mensaje que informa si el elemento sobre el que está el cursor es "marcable"
                 $("body").append("<div class='smx-marcable'>" + util.textos.infoMarcable + "</div>");
                 
                 //Añade contenedor de marcadores almacenados en memoria local (localStorage)
-                $("body").append("<div class='smx-contenedor-marcadores'>" + util.textos.historicoMarcadores + "<ul></ul></div>");
+                $("body").append("<div class='smx-contenedor-marcadores'><div class='smx-titulo-historico'>" + util.textos.historicoMarcadores + "<span class='smx-eliminar'></span></div></div>");
                 
                 //Cacheo de elementos
                 this.btoIr = $(".smx-boton");
@@ -406,7 +439,7 @@ var App = {
                 }.bind(this));
                 
                 $("h1, h2, h3, h4, p").on("mouseout", function (event) {
-                        // Esconder etiqueta informativa de elementno "marcable";       
+                        // Esconder etiqueta informativa de elementno "marcable";  
                         this.marcable.hide();
                 }.bind(this));
                 
@@ -416,13 +449,13 @@ var App = {
                 
                 this.eliminar.on("click", this.confirmarEliminar.bind(this));
                 
-                this.contenedor.on("mouseover", function () {
+                this.eliminar.on("mouseout", function (event) {
                         this.confirmacionEliminacion = false;
-                        this.eliminar.removeClass("smx-eliminar-confirmar");
-                }.bind(this));
+                        $(event.target).removeClass("smx-eliminar-confirmar");
+                }.bind(this));                
                 
                 this.btoListaMarcadores.on("click", function () {
-                        this.contenedorMarcadores.show();       
+                        this.contenedorMarcadores.show();
                 }.bind(this));
                 
                 this.contenedorMarcadores.on("mouseleave", function (event) {
@@ -475,23 +508,39 @@ var App = {
         },
         
         confirmarEliminar: function (event) {
+                var idMarcador;
+                
                 if (this.hayMarcador) {
                         if (!this.confirmacionEliminacion) {
-                                this.eliminar.addClass("smx-eliminar-confirmar");
+                                $(event.target).addClass("smx-eliminar-confirmar");
                                 this.confirmacionEliminacion = true;
                         } else {
                                 this.confirmacionEliminacion = false;
-                                this.eliminar.removeClass("smx-eliminar-confirmar");
-                                this.eliminarMarcador();
+                                $(event.target).removeClass("smx-eliminar-confirmar");
+                                idMarcador = $(event.target).data("id");
+                                this.eliminarMarcador(idMarcador);
                         }
                 }
         },
         
-        eliminarMarcador: function () {
-                util.cache.deleteBookMark();
+        eliminarMarcador: function (idMarcador) {
+                log("Eliminando marcador: " + idMarcador);
                 $("a[name='" + this.ANCHOR + "']").remove();
-                this.hayMarcador = false;
-                this.desactivarBoton();
+                //Se permite eliminar todos los marcadores o solo uno
+                if (idMarcador) {
+                        util.cache.deleteBookMark(idMarcador);
+                        this.hayMarcador = this.cargarHistoricoMarcadores();
+                        
+                        if (!this.hayMarcador) {
+                                this.desactivarBoton();
+                        }
+                }
+                else {
+                        util.cache.deleteBookMark();
+                        this.cargarHistoricoMarcadores();
+                        this.desactivarBoton();
+                        this.hayMarcador = false;
+                }
         },
         
         desactivarBoton: function () {
@@ -499,39 +548,52 @@ var App = {
                 this.contenedor.removeClass("activo").css("cursor", "text");
                 this.btoListaMarcadores.css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrNoHayMarcador).addClass("smx-boton-hover-off smx-boton-active-off");
-                this.eliminar.addClass("smx-eliminar-hover-off smx-eliminar-active-off");
+                //TODO: Desactivar la papelera cuando no quede ningún marcador
+                //this.eliminar.addClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
         activarBoton: function () {
                 this.infoNuevoMarcador.addClass("activo");
                 this.contenedor.addClass("activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador).removeClass("smx-boton-hover-off smx-boton-active-off");
-                this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
+                //TODO: Desactivar la papelera cuando no quede ningún marcador
+                //this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
+        //Retorna si hay marcadores o no (true/false)
         cargarHistoricoMarcadores: function () {
                 //Recupera de localStorage todos los marcadores almacenados y los muestra
                 var marcadores = util.cache.getBookMarksHistory(),
-                    marcadoresHTML = ""; 
+                    marcadoresHTML = "";
                 
                 //Primero se borra todo el historico de marcadores para luego volver a cargarlo actualizado
                 //Este selector no se puede cachear en la carga de la página porque en ese momento no existen los elementos a seleccionar.
                 $(".smx-marcador-historico").remove();
+                log("Carando histórico de marcadores");
                 
                 //NOTE: no es buena idea utilizar elementos 'ul' ya que es muy probable que la página tenga estilos por defecto para ese elemento
-                if(marcadores) {
-                        log(marcadores);
+                if(marcadores && marcadores.length > 0) {
+                        log("Parece que hay marcadores que añadir")
                         //TODO: Mostrar también la hora, minutos y segundos
                         $.each(marcadores, function () {
-                                marcadoresHTML = "<div class='smx-marcador-historico'>" + this.tip + "</div>" + marcadoresHTML;
+                                marcadoresHTML = "<div class='smx-marcador-historico'><span class='smx-eliminar' data-id='" + this.id + "'></span>" + this.tip + "</div>" + marcadoresHTML;
                         });
                         
-                        //El primero es un elemnto vacío para dejar espacio entre el título y el contenido
-                        marcadoresHTML = "<div></div>" + marcadoresHTML;
-                        
                         this.contenedorMarcadores.append(marcadoresHTML);
+                        
+                        //Añadir manejador para el evento 'click' sobre los marcadores cargados
+                        $(".smx-marcador-historico").on("click", this.confirmarEliminar.bind(this)); 
+                        
+                        $(".smx-marcador-historico").on("mouseout", function (event) {
+                                this.confirmacionEliminacion = false;
+                                $(event.target).removeClass("smx-eliminar-confirmar");
+                        }.bind(this));
+                        
+                        return true;
+                        
                 } else {
                         log("No hay marcadores");
+                        return false;
                 }
                 
         }
