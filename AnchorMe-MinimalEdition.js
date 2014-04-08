@@ -63,29 +63,34 @@ log('>>> Greasemonkey\'s working!');
 // Objeto de utilidades: Get y Set del marcador de la página (a localStorage)
 var util = {
         cache: {
+                
                 //Key del objecto de marcadores a guardar en localStorage
                 BM_KEY: "ANCHORME",
+                
                 //Construye el tipo de objeto que espera el método 'setBookMark'
                 bookMarckObject: function () {
                         return {
                                 id: 0,
                                 type: "",
                                 position: 0,
+                                percent: 0,
                                 tip: ""
                         };
                 },
                 setBookMark: function (obj) {
+                        
                         //TODO cerciorarse de que 'obj' es del tipo requerido. Con 'InstanceOf' o algo así.
                         //Se crea un identificador único para este marcador
                         obj.id = new Date().getTime();
                         
-                        log("obj.id:" + obj.id + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.tip: " + obj.tip);
+                        log("obj.id:" + obj.id + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.percent: " + obj.percent + "\nobj.tip: " + obj.tip);
                         
                         var bookMarks = localStorage.getItem(this.BM_KEY);
                         if (bookMarks) {
                                 bookMarks = JSON.parse(bookMarks);
                                 bookMarks.push(obj);
                         } else {
+                                
                                 //Si no existe aún un objeto de marcadores en localStorage lo creamos
                                 bookMarks = [];
                                 bookMarks.push(obj);
@@ -94,6 +99,7 @@ var util = {
                         localStorage.setItem(this.BM_KEY, JSON.stringify(bookMarks));
                         
                 },
+                
                 //NOTE: Actualmente este método no se utiliza.
                 //Retorna el marcador 'principal'
                 getBookMark: function () {
@@ -127,7 +133,8 @@ var util = {
                         }
                         return undefined;
                 },
-                //Retorna todos los marcadores escepto el 'principal'
+                
+                //Retorna todos los marcadores
                 getBookMarksHistory: function () {
                         var bookMarks = localStorage.getItem(this.BM_KEY);
                         if (bookMarks) {
@@ -140,14 +147,15 @@ var util = {
                         var tempBMArr = [];
                         
                         if (idBookMark) {
-                                //Borrar marcador que coincida con idBookMark
+                                
+                                //Borra el marcador que coincida con idBookMark
                                 var bookMarks = localStorage.getItem(this.BM_KEY);
                                 if (bookMarks) {
                                         bookMarks = JSON.parse(bookMarks);
-                                        //Borra el bookmark más actual, que es el último de la lista
+                                        
                                         $.each(bookMarks, function () {
                                                 if (this.id !== idBookMark) {
-                                                        tempBMArr.push(this); 
+                                                        tempBMArr.push(this);
                                                 }
                                         });
 
@@ -155,6 +163,7 @@ var util = {
                                 }
                                 log("Marcador eliminado");
                         } else {
+                                
                         //Borrar todos los marcadores
                                 localStorage.clear();
                                 log("Todos los marcadores eliminados");
@@ -174,12 +183,6 @@ var util = {
 //Objeto principal de la aplicación
 var App = {
         ANCHOR: "smuxAnchor",
-        marcador: {
-                id: 0,
-                type: "",
-                position: 0,
-                tip: ""
-        },
         hayMarcador: false,
         enConfirmacion: false,
         confirmacionEliminacion: false,
@@ -324,7 +327,7 @@ var App = {
                 "z-index: 99999;" +
                 "top: 15px;" +
                 "left: 10px;" +
-                "width: 350px;" +
+                "width: 520px;" +
                 "height: 300px;" +
                 "box-sizing: border-box;" +
                 "padding: 20px 20px 20px 20px;" +
@@ -352,7 +355,7 @@ var App = {
         " /*//NOTE: esta clase debe ser la última para que sobreescriba a las demás. */" +
         ".activo {" +
                 "opacity: 1;" +
-        "}",
+        "}",        
 
         loadScript: function () {
                 this.cargarInterfaz();
@@ -386,27 +389,60 @@ var App = {
                 this.btoListaMarcadores = $(".smx-lista-marcadores");
                 this.contenedorMarcadores = $(".smx-contenedor-marcadores");
         },
-
-        // Función ejecutada al iniciar que recoge de localStorage el marcador 
-        // y añade en el lugar adecuado <a name="marcador"></a>    
-        agregarMarcadorAlmacenado: function (marcador) {
-                var elementos;
+        
+        //Retorna si hay marcadores o no (true/false)
+        cargarHistoricoMarcadores: function () {
                 
-                //Si hay un marcador para esta página
-                if (marcador) {
-                        //Colección de los elementos del tipo del elemento marcado
-                        elementos = $(marcador.type);
-                        var that = this;
-
-                        $.each(elementos, function (i) {
-                                if (i === marcador.position) {
-                                        $(this).before("<a name='" + that.ANCHOR + "'></a>");
-                                        return false;
-                                }
+                //Recupera de localStorage todos los marcadores almacenados y los muestra
+                var marcadores = util.cache.getBookMarksHistory(),
+                    marcadoresHTML = "",
+                    infoMarcador,
+                    fm;
+                
+                //Primero se borra todo el historico de marcadores para luego volver a cargarlo actualizado
+                //Este selector no se puede cachear en la carga de la página porque en ese momento no existen los elementos a seleccionar.
+                $(".smx-marcador-historico").remove();
+                log("Carando histórico de marcadores");
+                
+                //NOTE: no es buena idea utilizar elementos 'ul' ya que es muy probable que la página tenga estilos por defecto para ese elemento
+                if (marcadores && marcadores.length > 0) {
+                        log("Parece que hay marcadores que añadir");
+                        //TODO: Mostrar también la hora, minutos y segundos
+                        $.each(marcadores, function () {
+                                fm = new Date(this.id); //Fecha del marcador
+                                infoMarcador = this.percent + "% " + fm.getDate() + "/" + (fm.getMonth() + 1) + "/" + fm.getFullYear() + " " + fm.getHours() + ":" + fm.getMinutes() + ":" + fm.getSeconds() + ": " + this.tip;
+                                marcadoresHTML = "<div class='smx-marcador-historico'><span class='smx-eliminar' data-id='" + this.id + "'></span>" + infoMarcador + "</div>" + marcadoresHTML;
                         });
                         
-                        log("Marcador Temporal Almacenado agregado a la página.");
-                } 
+                        this.contenedorMarcadores.append(marcadoresHTML);
+                        
+                        //Añadir el marcador principal a la página
+                        this.agregarMarcadorAlmacenado(marcadores[marcadores.length - 1]);
+                        
+                        $(".smx-marcador-historico:first").addClass("smx-marcador-principal");
+                        
+                        //Añadir manejadores para el evento 'click' y 'mouseout' sobre los marcadores cargados
+                        //Se eliminan los posibles listener sobre .smx-eliminar y se vuelven a añadir
+                        $(".smx-eliminar").off();
+                        
+                        $(".smx-eliminar").on("click", this.confirmarEliminar.bind(this));
+                        
+                        $(".smx-eliminar").on("mouseout", function (event) {
+                                this.confirmacionEliminacion = false;
+                                $(event.target).removeClass("smx-eliminar-confirmar");
+                        }.bind(this));
+                        
+                        this.activarBoton();
+                        this.hayMarcador = true;
+                        
+                        return true;
+                        
+                } else {
+                        log("No hay marcadores");
+                        this.hayMarcador = false;
+                        return false;
+                }
+                
         },
 
         bindElements: function () {
@@ -415,6 +451,7 @@ var App = {
                 $("h1, h2, h3, h4, p").on("dblclick", this.setMarcador.bind(this));
                 
                 $("h1, h2, h3, h4, p").on("mouseover", function (event) {
+                        
                         // Mostrar etiqueta informativa de elementno "marcable";       
                         $(event.target).prepend(this.marcable);
                         this.marcable.css("margin-button", "30px");
@@ -422,13 +459,14 @@ var App = {
                 }.bind(this));
                 
                 $("h1, h2, h3, h4, p").on("mouseout", function (event) {
+                        
                         // Esconder etiqueta informativa de elementno "marcable";  
                         this.marcable.hide();
                 }.bind(this));
                 
                 this.btoIr.on("click", function () {
                         window.location.hash = this.ANCHOR;
-                }.bind(this));              
+                }.bind(this));
                 
                 this.btoListaMarcadores.on("click", function () {
                         this.contenedorMarcadores.show();
@@ -457,9 +495,12 @@ var App = {
                 $.each(elementos, function (i) {
                         if (this === event.target) {
                                 marcador.position = i;
-                                marcador.tip = $.trim($(this).text().slice(1, 50)).slice(0,25) + "...";
+                                marcador.tip = $.trim($(this).text().slice(1, 50)).slice(0, 25) + "...";
                         }
                 });
+                
+                //Cálculo del porcentaje de avance de lectura
+                marcador.percent = Math.round(((marcador.position +1) * 100) / elementos.length);
 
                 //Guarda en localStorage el marcador de la página
                 util.cache.setBookMark(marcador);
@@ -483,6 +524,30 @@ var App = {
                 log('Marcador añadido: ' + $(event.target)[0].tagName);
         },
         
+
+        // Función ejecutada al iniciar que recoge de localStorage el marcador 
+        // y añade en el lugar adecuado <a name="marcador"></a>    
+        agregarMarcadorAlmacenado: function (marcador) {
+                var elementos;
+                
+                //Si hay un marcador para esta página
+                if (marcador) {
+                        
+                        //Colección de los elementos del tipo del elemento marcado
+                        elementos = $(marcador.type);
+                        var that = this;
+
+                        $.each(elementos, function (i) {
+                                if (i === marcador.position) {
+                                        $(this).before("<a name='" + that.ANCHOR + "'></a>");
+                                        return false;
+                                }
+                        });
+                        
+                        log("Marcador Temporal Almacenado agregado a la página.");
+                }
+        },        
+        
         confirmarEliminar: function (event) {
                 var idMarcador;
                 if (this.hayMarcador) {
@@ -500,6 +565,7 @@ var App = {
         
         eliminarMarcador: function (idMarcador) {
                 $("a[name='" + this.ANCHOR + "']").remove();
+                
                 //Se permite eliminar todos los marcadores o solo uno
                 if (idMarcador) {
                         util.cache.deleteBookMark(idMarcador);
@@ -508,8 +574,7 @@ var App = {
                         if (!this.hayMarcador) {
                                 this.desactivarBoton();
                         }
-                }
-                else {
+                } else {
                         util.cache.deleteBookMark();
                         this.cargarHistoricoMarcadores();
                         this.desactivarBoton();
@@ -522,7 +587,8 @@ var App = {
                 this.contenedor.removeClass("activo").css("cursor", "text");
                 this.btoListaMarcadores.css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrNoHayMarcador).addClass("smx-boton-hover-off smx-boton-active-off");
-                //TODO: Desactivar la papelera cuando no quede ningún marcador
+                
+                //TODO: Desactivar la papelera de borrado total cuando no quede ningún marcador
                 //this.eliminar.addClass("smx-eliminar-hover-off smx-eliminar-active-off");
         },
         
@@ -530,59 +596,10 @@ var App = {
                 this.infoNuevoMarcador.addClass("activo");
                 this.contenedor.addClass("activo").css("cursor", "pointer");
                 this.btoIr.text(util.textos.btoIrHayMarcador).removeClass("smx-boton-hover-off smx-boton-active-off");
-                //TODO: Activar la papelera cuando no quede ningún marcador
+                
+                //TODO: Activar la papelera de borrado total cuando no quede ningún marcador
                 //this.eliminar.removeClass("smx-eliminar-hover-off smx-eliminar-active-off");
-        },
-        
-        //Retorna si hay marcadores o no (true/false)
-        cargarHistoricoMarcadores: function () {
-                //Recupera de localStorage todos los marcadores almacenados y los muestra
-                var marcadores = util.cache.getBookMarksHistory(),
-                    marcadoresHTML = "";
-                
-                //Primero se borra todo el historico de marcadores para luego volver a cargarlo actualizado
-                //Este selector no se puede cachear en la carga de la página porque en ese momento no existen los elementos a seleccionar.
-                $(".smx-marcador-historico").remove();
-                log("Carando histórico de marcadores");
-                
-                //NOTE: no es buena idea utilizar elementos 'ul' ya que es muy probable que la página tenga estilos por defecto para ese elemento
-                if(marcadores && marcadores.length > 0) {
-                        log("Parece que hay marcadores que añadir")
-                        //TODO: Mostrar también la hora, minutos y segundos
-                        $.each(marcadores, function () {
-                                marcadoresHTML = "<div class='smx-marcador-historico'><span class='smx-eliminar' data-id='" + this.id + "'></span>" + this.tip + "</div>" + marcadoresHTML;
-                        });
-                        
-                        this.contenedorMarcadores.append(marcadoresHTML);
-                        
-                        //Añadir el marcador principal a la página
-                        this.agregarMarcadorAlmacenado(marcadores[marcadores.length - 1]);
-                        
-                        $(".smx-marcador-historico:first").addClass("smx-marcador-principal");
-                        
-                        //Añadir manejadores para el evento 'click' y 'mouseout' sobre los marcadores cargados
-                        $(".smx-eliminar").off();
-                        
-                        $(".smx-eliminar").on("click", this.confirmarEliminar.bind(this)); 
-                        
-                        $(".smx-eliminar").on("mouseout", function (event) {
-                                this.confirmacionEliminacion = false;
-                                $(event.target).removeClass("smx-eliminar-confirmar");
-                        }.bind(this));
-                        
-                        this.activarBoton();
-                        this.hayMarcador = true;
-                        
-                        return true;
-                        
-                } else {
-                        log("No hay marcadores");
-                        this.hayMarcador = false;
-                        return false;
-                }
-                
         }
-
 };
 
 //Cargar jQuery si la página no lo tiene. 
@@ -603,7 +620,7 @@ if (!isJQuery) {
         //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
         //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
         log(">>La página ya dispone de jQuery. Se comenzará con el Script en 2 segundos.");
-        //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
         
+        //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
         setTimeout(App.loadScript.bind(App), 2000);
 }
