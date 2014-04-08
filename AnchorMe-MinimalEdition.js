@@ -9,6 +9,7 @@
 // @include     http://www.atareao.es/*
 // @include     http://addyosmani.github.io/backbone-fundamentals/*
 // @include     https://github.com/Nijikokun/the-zen-approach/blob/master/*
+// @include     http://getpocket.com/*
 // @version     0.1
 // @grant       none
 // ==/UserScript==
@@ -367,7 +368,7 @@ var App = {
                 $("head").append("<style>" + this.estilos + "</style>");
 
                 //Añado el botón de Ir al Marcador
-                $("body").append("<div class='smx-contenedor'><span class='smx-lista-marcadores'></span><div class='smx-boton'>" + util.textos.btoIrHayMarcador + "</div>" +
+                $("body").append("<div class='smx-contenedor'><span class='smx-lista-marcadores'></span><div class='smx-boton'>" + util.textos.btoIrNoHayMarcador + "</div>" +
                                  "</div><div class='smx-info'>" + util.textos.infoMarca + "</div>");
                 
                 //Añado el mensaje que informa si el elemento sobre el que está el cursor es "marcable"
@@ -427,14 +428,7 @@ var App = {
                 
                 this.btoIr.on("click", function () {
                         window.location.hash = this.ANCHOR;
-                }.bind(this));
-                
-                this.eliminar.on("click", this.confirmarEliminar.bind(this));
-                
-                this.eliminar.on("mouseout", function (event) {
-                        this.confirmacionEliminacion = false;
-                        $(event.target).removeClass("smx-eliminar-confirmar");
-                }.bind(this));                
+                }.bind(this));              
                 
                 this.btoListaMarcadores.on("click", function () {
                         this.contenedorMarcadores.show();
@@ -491,7 +485,6 @@ var App = {
         
         confirmarEliminar: function (event) {
                 var idMarcador;
-                
                 if (this.hayMarcador) {
                         if (!this.confirmacionEliminacion) {
                                 $(event.target).addClass("smx-eliminar-confirmar");
@@ -506,7 +499,6 @@ var App = {
         },
         
         eliminarMarcador: function (idMarcador) {
-                log("Eliminando marcador: " + idMarcador);
                 $("a[name='" + this.ANCHOR + "']").remove();
                 //Se permite eliminar todos los marcadores o solo uno
                 if (idMarcador) {
@@ -569,6 +561,8 @@ var App = {
                         $(".smx-marcador-historico:first").addClass("smx-marcador-principal");
                         
                         //Añadir manejadores para el evento 'click' y 'mouseout' sobre los marcadores cargados
+                        $(".smx-eliminar").off();
+                        
                         $(".smx-eliminar").on("click", this.confirmarEliminar.bind(this)); 
                         
                         $(".smx-eliminar").on("mouseout", function (event) {
