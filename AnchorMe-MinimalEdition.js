@@ -68,14 +68,13 @@ var util = {
                 BM_KEY: "ANCHORME",
                 
                 //Construye el tipo de objeto que espera el método 'setBookMark'
-                bookMarckObject: function () {
-                        return {
-                                id: 0,
-                                type: "",
-                                position: 0,
-                                percent: 0,
-                                tip: ""
-                        };
+                //Debe invocarse con el operador new (new util.cache.BookMarkObject)
+                BookMarckObject: function () {
+                        this.id= 0;
+                        this.type= "";
+                        this.position= 0;
+                        this.percent= 0;
+                        this.tip= "";
                 },
                 setBookMark: function (obj) {
                         
@@ -486,7 +485,7 @@ var App = {
                 //Machaca si existe un marcador anterior
                 $("a[name='" + this.ANCHOR + "']").remove();
                 
-                var marcador = new util.cache.bookMarckObject();
+                var marcador = new util.cache.BookMarckObject();
                 
                 marcador.type = $(event.target)[0].tagName;
 
