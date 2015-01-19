@@ -22,7 +22,7 @@
  * Solo se permite un marcador, así que si se vuelve a hacer doble click el primer marcador se elimina.
  *
  * TODO:
- * - En histórico: Añadir icono (o algo) para poder hacer un marcador principal (el onclick en marcadores no va al marcador)
+ * - En histórico: Añadir funcionalidad para exportar e importar marcadores
  */
 
 /*
