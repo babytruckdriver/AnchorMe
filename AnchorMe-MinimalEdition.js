@@ -430,7 +430,6 @@
 
                         // Primero se borra todo el historico de marcadores para luego volver a cargarlo actualizado
                         // Este selector no se puede cachear en la carga de la página porque en ese momento no existen los elementos a seleccionar.
-                        // NOTE: ¿No podría cachearse delegado $(padre .smx-marcador-historico)?
                         $(".smx-marcador-historico").remove();
 
                         log("Cargando histórico de marcadores");
