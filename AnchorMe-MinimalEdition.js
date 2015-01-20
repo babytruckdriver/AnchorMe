@@ -519,7 +519,7 @@
                         $.each(elementos, function (i) {
                                 if (this === event.target) {
                                         marcador.position = i;
-                                        marcador.tip = $.trim($(this).text().slice(1, 50)).slice(0, 25) + "...";
+                                        marcador.tip = $.trim($(this).text().slice(0, 50)).slice(0, 25) + "...";
                                 }
                         });
 
