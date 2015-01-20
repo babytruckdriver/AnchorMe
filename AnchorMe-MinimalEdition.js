@@ -199,10 +199,10 @@
                          "@font-face{" +
                          " " +
                          "font-family:smx-FontAwesome;" +
-                         " src:url(http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.eot?#iefix) format('eot')," +
-                         "url(http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.woff) format('woff')," +
-                         "url(http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.ttf) format('truetype')," +
-                         "url(http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.svg#FontAwesome) format('svg');" +
+                         " src:url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.eot?#iefix) format('eot')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.woff) format('woff')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.ttf) format('truetype')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.svg#FontAwesome) format('svg');" +
                          " font-weight:400;" +
                          " font-style:normal;" +
                          " " +
