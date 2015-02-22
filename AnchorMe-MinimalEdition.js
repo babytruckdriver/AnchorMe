@@ -465,7 +465,11 @@
                 bindElements: function () {
 
                         //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
-                        $("h1, h2, h3, h4, p").on("dblclick", this.setMarcador.bind(this));
+                        $("h1, h2, h3, h4, p").on("dblclick", function (event) {
+                                if(event.ctrlKey) {
+                                       this.setMarcador.call(this, event);
+                                }
+                        }.bind(this));
 
                         $("h1, h2, h3, h4, p").on("mouseover", function (event) {
 
