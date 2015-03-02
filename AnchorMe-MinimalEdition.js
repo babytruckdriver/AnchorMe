@@ -76,6 +76,19 @@
                                 this.position = 0;
                                 this.percent = 0;
                                 this.tip = "";
+                                
+                                // Función que serializa los atributos de 'this' en formato 'queryString' ( &nomAttr=valor&... ).
+                                this.stringify = function () {
+                                        var name, result = "";
+                                        
+                                        // La función acepta 'this' con métodos ("function"), pero no los tiene en cuenta
+                                        Object.getOwnPropertyNames(this).forEach(function (name) {
+                                                if (typeof this[name] !== "function") {
+                                                        result += "&" + name + "=" + this[name];
+                                                }
+                                        }, this);
+                                        return result;
+                                };                                  
                         },
                         setBookMark: function (obj) {
 
@@ -87,9 +100,11 @@
 
                                 // Se crea un identificador único para este marcador
                                 obj.id = new Date().getTime();
-
-                                log("obj.id:" + obj.id + " \nobj.type:" + obj.type + "\nobj.position: " + obj.position + "\nobj.percent: " + obj.percent + "\nobj.tip: " + obj.tip);
-
+                                
+                                log("----------------");
+                                log("Objeto a almacenar: " + obj.stringify());
+                                log("----------------");
+                                
                                 var bookMarks = localStorage.getItem(this.BM_KEY);
                                 if (bookMarks) {
                                         bookMarks = JSON.parse(bookMarks);
