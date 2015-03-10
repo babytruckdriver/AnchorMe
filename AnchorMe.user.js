@@ -1,11 +1,11 @@
 /*jslint indent:8, devel:true, browser:true, vars:true*/
 /*global jQuery, $, console*/
 // ==UserScript==
-// @name        AnchorMe-MinimalEdition
-// @namespace   http://userscripts.org/smux
+// @name        AnchorMe
+// @namespace   AnchorMe
 // @description Set a reading mark in the pages you choose. Never forget where your reading finish last time.
 // @include     https://developer.mozilla.org/*
-// @include     http://www.2ality.com/2013/06/basic-javascript.html*
+// @include     http://www.2ality.com/*
 // @include     http://www.atareao.es/*
 // @include     http://addyosmani.github.io/backbone-fundamentals/*
 // @include     https://github.com/Nijikokun/the-zen-approach/blob/master/*
@@ -18,10 +18,10 @@
 // -@-require     http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js
 //
 /*
- * Haciendo doble click sobre un texto se crea un marcador.
+ * Haciendo Ctrl + doble click sobre un texto se crea un marcador.
  *
- * TODO:
- * - En histórico: Añadir importar e exportar marcador
+ * //TODO: En histórico: Añadir importar e exportar marcador
+ *
  */
 
 /*
@@ -58,7 +58,7 @@
                         console.log(logString);
                 }
         };
-        log(">>> Greasemonkey\'s working!");
+        log(">>> Greasemonkey\'s working on this page!");
 
 
         // Objeto de utilidades: Get y Set del marcador de la página (a localStorage)
@@ -88,7 +88,7 @@
                                                 }
                                         }, this);
                                         return result;
-                                };                                  
+                                };
                         },
                         setBookMark: function (obj) {
 
@@ -138,8 +138,6 @@
                                         // Id más alto. Al ser una fecha es el marcador más reciente
                                         idMarcadorActivo = Math.max.apply(null, ids);
 
-                                        // CHANGES: El algoritmo no me gusta demasiado. Tener que recorrer el Array dos veces me irrita!!
-                                        // Es posible que el marcador más moderno siempre sea el último y nos podamos ahorrar dos dos 'each'
                                         bookMarks.forEach(function (reg) {
                                                 if (reg.id === idMarcadorActivo) {
                                                         marcadorAtivo = reg;
@@ -214,10 +212,10 @@
                          "@font-face{" +
                          " " +
                          "font-family:smx-FontAwesome;" +
-                         " src:url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.eot?#iefix) format('eot')," +
-                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.woff) format('woff')," +
-                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.ttf) format('truetype')," +
-                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/fonts/fontawesome-webfont.svg#FontAwesome) format('svg');" +
+                         " src:url(https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.eot?#iefix) format('eot')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.woff) format('woff')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.ttf) format('truetype')," +
+                         "url(https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.svg#FontAwesome) format('svg');" +
                          " font-weight:400;" +
                          " font-style:normal;" +
                          " " +
@@ -305,11 +303,51 @@
                          ".smx-eliminar:active::after {" +
                          "        opacity: 0.3;" +
                          "}" +
-                         ".smx-eliminar-hover-off:hover::after {" +
-                         "        opacity: 1;" +
+                         ".smx-exportar {" +
+                         "        font-family: smx-FontAwesome;" +
+                         "        /* //NOTE: padding: arriba-abajo izquierda-derecha */" +
+                         "        padding: 0 5px 0 10px;" +
                          "}" +
-                         ".smx-eliminar-active-off:active::after {" +
-                         "        opacity: 1;" +
+                         ".smx-exportar::after {" +
+                         "        content: '\\f102';" +
+                         "        font-size: 14px;" +
+                         "        display: inline-block;" +
+                         "        /* //NOTE: A los elementos inline no se les puede cambiar el ancho o alto */" +
+                         "        cursor: pointer;" +
+                         "        width: 10px;" +
+                         "}" +
+                         ".smx-exportar:hover::after {" +
+                         "        opacity: 0.6;" +
+                         "}" +
+                         ".smx-exportar:active::after {" +
+                         "        opacity: 0.3;" +
+                         "}" +
+                         ".smx-exportar.off::after {" +
+                         "        display: none;" +
+                         "        cursor: default;" +
+                         "}" +
+                         ".smx-importar {" +
+                         "        font-family: smx-FontAwesome;" +
+                         "        /* //NOTE: padding: arriba-abajo izquierda-derecha */" +
+                         "        padding: 0 10px 0 5px;" +
+                         "}" +
+                         ".smx-importar::after {" +
+                         "        content: '\\f103';" +
+                         "        font-size: 14px;" +
+                         "        display: inline-block;" +
+                         "        /* //NOTE: A los elementos inline no se les puede cambiar el ancho o alto */" +
+                         "        cursor: pointer;" +
+                         "        width: 10px;" +
+                         "}" +
+                         ".smx-importar:hover::after {" +
+                         "        opacity: 0.6;" +
+                         "}" +
+                         ".smx-importar:active::after {" +
+                         "        opacity: 0.3;" +
+                         "}" +
+                         ".smx-importar.off::after {" +
+                         "        display: none;" +
+                         "        cursor: default;" +
                          "}" +
                          ".smx-marcable {" +
                          "        position: absolute;" +
@@ -372,6 +410,11 @@
                          "        margin: 5px;" +
                          "        border-radius: 2px;" +
                          "}" +
+                         ".smx-inpor-expor-container {" +
+                         "        background-color: rgba(0, 0, 0, 0.3);" +
+                         "        border-radius: 2px;" +
+                         "        float: right;" +
+                         "}" +
                          ".smx-marcador-historico {" +
                          "        text-align: left;" +
                          "        background-color: black;" +
@@ -418,6 +461,10 @@
                         $("body").append("<div class='smx-contenedor-marcadores'>" +
                                          "      <div class='smx-titulo-historico'>" + util.textos.historicoMarcadores +
                                          "              <span class='smx-eliminar'></span>" +
+                                         "              <div class='smx-inpor-expor-container'>" +
+                                         "                      <span class='smx-exportar'></span>" +
+                                         "                      <span class='smx-importar'></span>" +
+                                         "              </div>" +
                                          "      </div>" +
                                          "</div>");
 
@@ -431,10 +478,13 @@
 
                         this.contenedorMarcadores = $(".smx-contenedor-marcadores");
                         this.eliminar = this.contenedorMarcadores.find(".smx-eliminar");
+                        this.btoExportar = this.contenedorMarcadores.find(".smx-exportar");
+                        this.btoImportar = this.contenedorMarcadores.find(".smx-importar");
 
                 },
 
                 // Retorna si hay marcadores o no (true/false)
+                // Actualiza el panel de listado de marcadores
                 cargarHistoricoMarcadores: function () {
 
                         // Recupera de localStorage todos los marcadores almacenados y los muestra
@@ -481,8 +531,8 @@
 
                         //Solo es posible añadir un marcador a los elementos h1, h2, h3, h4, y p.
                         $("h1, h2, h3, h4, p").on("dblclick", function (event) {
-                                if(event.ctrlKey) {
-                                       this.setMarcador.call(this, event);
+                                if (event.ctrlKey) {
+                                        this.setMarcador.call(this, event);
                                 }
                         }.bind(this));
 
@@ -516,6 +566,8 @@
                         // Se usa la delegación del evento "click" porque en el momento de cargar la página los elementos
                         // a los que se pretende enlazar aún no existen.
                         this.contenedorMarcadores.on("click", ".smx-eliminar", this.confirmarEliminar.bind(this));
+
+                        this.contenedorMarcadores.on("click", ".smx-exportar", this.exportar.bind(this));
 
                         this.contenedorMarcadores.on("mouseout", ".smx-eliminar", function (event) {
                                 this.confirmacionEliminacion = false;
@@ -623,14 +675,20 @@
                         }
                 },
 
+                exportar: function (event) {
+                        //TODO: Implementar función de exportación: Leer último marcador guardado y mostrarlo por pantalla
+                        var marcador = new util.cache.BookMarckObject();
+                },
+
                 desactivarBoton: function () {
                         this.infoNuevoMarcador.removeClass("activo");
                         this.contenedor.removeClass("activo").css("cursor", "text");
                         this.btoListaMarcadores.css("cursor", "pointer");
                         this.btoIr.text(util.textos.btoIrNoHayMarcador).addClass("smx-boton-hover-off smx-boton-active-off");
 
-                        //TODO: Ocultar la papelera de borrado total cuando no quede ningún marcador
                         this.eliminar.addClass("off");
+                        this.btoExportar.addClass("off");
+                        this.btoImportar.addClass("off");
                 },
 
                 activarBoton: function () {
@@ -638,8 +696,9 @@
                         this.contenedor.addClass("activo").css("cursor", "pointer");
                         this.btoIr.text(util.textos.btoIrHayMarcador).removeClass("smx-boton-hover-off smx-boton-active-off");
 
-                        //TODO: Mostrar la papelera de borrado total cuando no quede ningún marcador
                         this.eliminar.removeClass("off");
+                        this.btoExportar.removeClass("off");
+                        this.btoImportar.removeClass("off");
                 }
         };
 
