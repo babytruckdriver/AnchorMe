@@ -436,6 +436,7 @@
 
                 loadScript: function () {
                         this.cargarInterfaz();
+                        this.cacheElements();
                         this.cargarHistoricoMarcadores();
                         this.bindElements();
 
@@ -467,8 +468,10 @@
                                          "              </div>" +
                                          "      </div>" +
                                          "</div>");
+                },
 
-                        //Cacheo de elementos
+                //Cacheo de elementos
+                cacheElements:  function () {
                         this.contenedor = $(".smx-contenedor");
                         this.btoIr = this.contenedor.find(".smx-boton");
                         this.btoListaMarcadores = this.contenedor.find(".smx-lista-marcadores");
@@ -480,7 +483,6 @@
                         this.eliminar = this.contenedorMarcadores.find(".smx-eliminar");
                         this.btoExportar = this.contenedorMarcadores.find(".smx-exportar");
                         this.btoImportar = this.contenedorMarcadores.find(".smx-importar");
-
                 },
 
                 // Retorna si hay marcadores o no (true/false)
@@ -568,6 +570,7 @@
                         this.contenedorMarcadores.on("click", ".smx-eliminar", this.confirmarEliminar.bind(this));
 
                         this.contenedorMarcadores.on("click", ".smx-exportar", this.exportar.bind(this));
+                        this.contenedorMarcadores.on("click", ".smx-importar", this.importar.bind(this));
 
                         this.contenedorMarcadores.on("mouseout", ".smx-eliminar", function (event) {
                                 this.confirmacionEliminacion = false;
@@ -676,7 +679,15 @@
                 },
 
                 exportar: function (event) {
+
                         //TODO: Implementar función de exportación: Leer último marcador guardado y mostrarlo por pantalla
+                        var marcador = new util.cache.BookMarckObject();
+                },
+
+                importar: function (event) {
+
+                        //TODO: Implementar función de eimportación.
+                        //Leer el marcador pegado en un campo de texto, parsearle e invocar a Util.cache.setBookMark
                         var marcador = new util.cache.BookMarckObject();
                 },
 
