@@ -194,7 +194,9 @@
                         infoMarca: "Marcador añadido",
                         infoMarcable: "Marcable",
                         eliminar: "¿Eliminar?",
-                        historicoMarcadores: "Histórico de marcadores"
+                        historicoMarcadores: "Histórico de marcadores",
+                        btoImportar: "Importar Marcador",
+                        btoExportar: "Exportar Marcador"
                 }
         };
 
@@ -349,6 +351,12 @@
                          "        display: none;" +
                          "        cursor: default;" +
                          "}" +
+                         ".smx-do-importar {" +
+                         "        display: none;" +
+                         "        background-color: rgba(247, 146, 146, 0.8);" +
+                         "        border-radius: 2px;" +
+                         "        padding: 0 10px 0 10px;" +
+                         "}" +
                          ".smx-marcable {" +
                          "        position: absolute;" +
                          "        /*Si se utiliza 'em' se hereda el tamaño del contenedor*/" +
@@ -421,6 +429,9 @@
                          "        margin: 5px;" +
                          "        border-radius: 2px;" +
                          "}" +
+                         ".smx-area-texto {" +
+                         "        display: none;" +
+                         "}" +
                          "/* De todos los elementos con la clase '.smx-marcador-historico' " +
                          "   solo al segundo se le aplicará este estilo. */" +
                          " " +
@@ -463,9 +474,13 @@
                                          "      <div class='smx-titulo-historico'>" + util.textos.historicoMarcadores +
                                          "              <span class='smx-eliminar'></span>" +
                                          "              <div class='smx-inpor-expor-container'>" +
-                                         "                      <span class='smx-exportar'></span>" +
-                                         "                      <span class='smx-importar'></span>" +
+                                         "                      <span class='smx-exportar' alt='" + util.textos.btoExportar + "'></span>" +
+                                         "                      <span class='smx-importar' alt='" + util.textos.btoImportar + "'></span>" +
                                          "              </div>" +
+                                         "      </div>" +
+                                         "      <div class='smx-area-texto'>" +
+                                         "              <textarea></textarea>" +
+                                         "              <span class='smx-importar smx-do-importar' alt='" + util.textos.btoImportar + "'></span>" +
                                          "      </div>" +
                                          "</div>");
                 },
@@ -483,6 +498,8 @@
                         this.eliminar = this.contenedorMarcadores.find(".smx-eliminar");
                         this.btoExportar = this.contenedorMarcadores.find(".smx-exportar");
                         this.btoImportar = this.contenedorMarcadores.find(".smx-importar");
+                        this.txtArea = this.contenedorMarcadores.find(".smx-area-texto");
+                        this.doImportar = this.txtArea.find(".smx-do-importar");
                 },
 
                 // Retorna si hay marcadores o no (true/false)
@@ -560,10 +577,11 @@
                         }.bind(this));
 
                         this.contenedorMarcadores.on("mouseleave", function (event) {
-                                $(this).delay(500).queue(function () {
-                                        $(this).hide("fast").dequeue();
-                                });
-                        });
+                                $(event.target).delay(500).queue(function () {
+                                        $(event.target).hide("fast").dequeue();
+                                        this.txtArea.hide();
+                                }.bind(this));
+                        }.bind(this));
 
                         // Se usa la delegación del evento "click" porque en el momento de cargar la página los elementos
                         // a los que se pretende enlazar aún no existen.
@@ -581,8 +599,8 @@
 
                 setMarcador: function (event) {
 
-                        //Llamada a la función que guarda la información en localStorage
-                        //Machaca si existe un marcador anterior
+                        // Llamada a la función que guarda la información en localStorage
+                        // Machaca si existe un marcador anterior
                         $("a[name='" + this.ANCHOR + "']").remove();
 
                         var marcador = new util.cache.BookMarckObject();
@@ -598,22 +616,22 @@
                                 }
                         });
 
-                        //Cálculo del porcentaje de avance de lectura
+                        // Cálculo del porcentaje de avance de lectura
                         marcador.percent = Math.round(((marcador.position + 1) * 100) / elementos.length);
 
-                        //Guarda en localStorage el marcador de la página
+                        // Guarda en localStorage el marcador de la página
                         util.cache.setBookMark(marcador);
 
-                        //Se incluye el marcador en la página para ser usuado en esta sesión
+                        // Se incluye el marcador en la página para ser usuado en esta sesión
                         $(event.target).before("<a name='" + this.ANCHOR + "'></a>");
 
                         this.activarBoton();
                         this.hayMarcador = true;
 
-                        //Actualiza el panel de histórico de marcadores
+                        // Actualiza el panel de histórico de marcadores
                         this.cargarHistoricoMarcadores();
 
-                        //Muestra, mediante animación, que se ha añadido un marcador
+                        // Muestra, mediante animación, que se ha añadido un marcador
                         this.infoNuevoMarcador.css('width', '320px')
                                 .delay(2000).queue(function () {
                                         this.infoNuevoMarcador.css('width', '160px').dequeue();
@@ -627,7 +645,7 @@
                 agregarMarcadorAlmacenado: function (marcador) {
                         var elementos;
 
-                        //Si hay un marcador para esta página
+                        // Si hay un marcador para esta página
                         if (marcador) {
 
                                 //Colección de los elementos del tipo del elemento marcado
@@ -662,7 +680,7 @@
                 eliminarMarcador: function (idMarcador) {
                         $("a[name='" + this.ANCHOR + "']").remove();
 
-                        //Se permite eliminar todos los marcadores o solo uno
+                        // Se permite eliminar todos los marcadores o solo uno
                         if (idMarcador) {
                                 util.cache.deleteBookMark(idMarcador);
                                 this.hayMarcador = this.cargarHistoricoMarcadores();
@@ -680,15 +698,21 @@
 
                 exportar: function (event) {
 
-                        //TODO: Implementar función de exportación: Leer último marcador guardado y mostrarlo por pantalla
+                        // TODO: Implementar función de exportación: Leer último marcador guardado y mostrarlo por pantalla
                         var marcador = new util.cache.BookMarckObject();
+
+                        this.txtArea.show("slow");
+                        this.doImportar.hide("slow");
                 },
 
                 importar: function (event) {
 
-                        //TODO: Implementar función de eimportación.
-                        //Leer el marcador pegado en un campo de texto, parsearle e invocar a Util.cache.setBookMark
+                        // TODO: Implementar función de eimportación.
+                        // Leer el marcador pegado en un campo de texto, parsearle e invocar a Util.cache.setBookMark
                         var marcador = new util.cache.BookMarckObject();
+
+                        this.txtArea.show("slow");
+                        this.doImportar.show("slow");
                 },
 
                 desactivarBoton: function () {
@@ -713,7 +737,7 @@
                 }
         };
 
-        //Cargar jQuery si la página no lo tiene.
+        // Cargar jQuery si la página no lo tiene.
         var isJQuery = (typeof jQuery === "undefined") ? false : true;
 
         // Si la página no dispone de jQuery hay que incluirlo, por lo que se debe esperar un tiempo
@@ -724,15 +748,15 @@
                 script.src = "http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js";
                 document.head.appendChild(script);
 
-                //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
+                // NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
                 setTimeout(App.loadScript.bind(App), 6000);
         } else {
 
-                //Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
-                //Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
+                // Si se dispone de jQuery se podrá esperar menos, pero hay que dar tiempo a que la página cargue completamente
+                // Las páginas maś complejas se cargan desde varias fuentes, por lo que el "ready" de jQuery no es definitivo.
                 log(">>La página ya dispone de jQuery. Se comenzará con el Script en 2 segundos.");
 
-                //NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
+                // NOTE: setTimeout() causes javascript to use the global scope ('this' is 'window')
                 setTimeout(App.loadScript.bind(App), 2000);
         }
 }());
